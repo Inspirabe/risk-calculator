@@ -1,0 +1,8 @@
+{
+  "name": "Risk Calculator",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular",
+  "id": "e58da39e"
+}
