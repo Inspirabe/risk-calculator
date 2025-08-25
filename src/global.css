@@ -39,3 +39,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+.title-icon {
+  height: 24px;
+  margin-right: 8px;
+}
