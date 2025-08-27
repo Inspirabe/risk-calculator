@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { ModalController } from '@ionic/angular';
+import { LeveragePickerPage } from '../leverage-picker/leverage-picker.page';
 
 @Component({
   selector: 'app-tab1',
@@ -26,5 +28,22 @@ export class Tab1Page {
 
   reset() {
     this.entry = 100; this.stop = 95; this.tp = 110; this.lev = 1; this.riskPct = 0;
+  }
+
+  constructor(private modalCtrl: ModalController) {}
+
+  async openLeverage() {
+    const modal = await this.modalCtrl.create({
+      component: LeveragePickerPage,
+      componentProps: { value: this.lev, min: 1, max: 100, title: 'Edit Leverage' },
+      breakpoints: [0, 0.4, 0.9],
+      initialBreakpoint: 0.9, // voelt als een sheet zoals in je screenshot
+    });
+
+    modal.onDidDismiss().then(({ data }) => {
+      if (typeof data === 'number') this.lev = data;
+    });
+
+    await modal.present();
   }
 }

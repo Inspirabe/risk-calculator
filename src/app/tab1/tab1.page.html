@@ -14,29 +14,56 @@
 <ion-content [fullscreen]="true" class="p-4">
   <div class="space-y-4 max-w-xl mx-auto">
     <ion-card class="p-4 rounded-2xl shadow">
-      <h2 class="text-xl font-semibold mb-2">Trade inputs</h2>
+      <h2 class="text-xl font-semibold mb-2">Trade</h2>
 
-      <div class="grid grid-cols-1 gap-3">
-        <ion-item class="rounded-xl">
-          <ion-label position="stacked">Entry</ion-label>
-          <!-- <ion-input type="number" [(ngModel)]="entry"></ion-input> -->
+      <div class="grid grid-cols-1 gap-1">
+        
+        <ion-item lines="none" class="py-0">
+            <ion-label position="stacked" class="text-xs font-medium">Entry Price</ion-label>
+            <ion-input type="number" [(ngModel)]="entry" class="bg-gray-100 dark:bg-gray-800 rounded-md text-sm" style="--padding-start: 0.75rem;">
+                <div slot="end" class="flex items-center justify-center w-6 text-gray-500 dark:text-gray-400 dark:text-gray-400">$</div>
+            </ion-input>
         </ion-item>
 
-        <ion-item class="rounded-xl">
-          <ion-label position="stacked">Stop Loss</ion-label>
-          <ion-input type="number" [(ngModel)]="stop"></ion-input>
+        <ion-item lines="none" class="py-0">
+            <ion-label position="stacked" class="text-xs font-medium">Take Profit</ion-label>
+            <ion-input type="number" [(ngModel)]="tp" class="bg-gray-100 dark:bg-gray-800 rounded-md text-sm" style="--padding-start: 0.75rem;">
+                <div slot="end" class="flex items-center justify-center w-6 text-gray-500 dark:text-gray-400">$</div>
+            </ion-input>
         </ion-item>
 
-        <ion-item class="rounded-xl">
-          <ion-label position="stacked">Take Profit</ion-label>
-          <ion-input type="number" [(ngModel)]="tp"></ion-input>
+        <ion-item lines="none" class="py-0">
+            <ion-label position="stacked" class="text-xs font-medium">Stop Loss</ion-label>
+            <ion-input type="number" [(ngModel)]="stop" class="bg-gray-100 dark:bg-gray-800 rounded-md text-sm" style="--padding-start: 0.75rem;">
+                <div slot="end" class="flex items-center justify-center w-6 text-gray-500 dark:text-gray-400">$</div>
+            </ion-input>
         </ion-item>
 
-        <ion-item class="rounded-xl">
-          <ion-label position="stacked">Leverage</ion-label>
-          <ion-input type="number" [(ngModel)]="lev"></ion-input>
+
+        
+        <!-- Compact item met klikbare waarde rechts -->
+        <ion-item lines="none" class="py-0">
+            <ion-label class="text-sm">Leverage</ion-label>
+
+            <button type="button"
+                    slot="end"
+                    (click)="openLeverage()"
+                    class="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm font-semibold">
+                {{ lev }}<span class="opacity-70">x</span>
+            </button>
         </ion-item>
+
+
+<!--         
+        <ion-item lines="none" class="py-0">
+            <ion-label position="stacked" class="text-xs font-medium">Leverage</ion-label>
+            <ion-input type="number" [(ngModel)]="lev" class="bg-gray-100 dark:bg-gray-800 rounded-md text-sm" style="--padding-start: 0.75rem;">
+            </ion-input>
+        </ion-item> -->
+
+
       </div>
+
 
       <div class="flex items-center gap-3 mt-4">
         <ion-button expand="block" class="flex-1" (click)="calc()">Calculate</ion-button>

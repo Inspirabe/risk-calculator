@@ -41,6 +41,33 @@
 @tailwind utilities;
 
 
+/* Tokens die met Ionic’s thema meeschakelen */
+:root {
+  --field-bg: var(--ion-color-step-50);     /* licht in light mode */
+  --field-text: var(--ion-text-color);
+  --field-placeholder: var(--ion-color-medium);
+}
+
+/* In dark mode wordt step-150 wat donkerder grijs */
+:root.dark {
+  --field-bg: var(--ion-color-step-150);
+}
+
+/* Herbruikbare compacte inputstijl zonder borders/rings—iOS look */
+ion-input.ios-field {
+  --background: var(--field-bg);
+  --color: var(--field-text);
+  --placeholder-color: var(--field-placeholder);
+  --padding-start: 0.75rem;
+  --padding-end: 0.5rem;
+  --border-radius: 10px;
+
+  /* underline (highlight) zoals iOS: subtiel en dun */
+  --highlight-height: 2px;
+  --highlight-color: transparent;                /* idle: geen opvallende lijn */
+  --highlight-color-focused: var(--ion-color-primary); /* bij focus: dunne primaire lijn */
+}
+
 .title-icon {
   height: 24px;
   margin-right: 8px;
