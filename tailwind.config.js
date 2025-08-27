@@ -4,6 +4,7 @@ module.exports = {
         "./src/**/*.{html,ts}",
         "./node_modules/@ionic/angular/**/*.mjs"
     ],
+    darkMode: 'class',
     theme: {
         extend: {
             // Optioneel: koppel Tailwind-kleuren aan Ionic CSS vars

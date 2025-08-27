@@ -1,0 +1,79 @@
+/* ---------- LIGHT (default) ---------- */
+:root {
+    /* Background & text (Tailwind slate-50 / slate-900) */
+    --ion-background-color: #f8fafc;      /* slate-50 */
+    --ion-text-color:        #0f172a;      /* slate-900 */
+
+    /* Toolbar / items / cards (zachte lichttinten) */
+    --ion-toolbar-background: #ffffff;     /* white */
+    --ion-item-background:    #ffffff;
+    --ion-card-background:    #ffffff;
+
+    /* Primary (Tailwind sky-600) */
+    --ion-color-primary: #0284c7;          /* sky-600 */
+    --ion-color-primary-contrast: #ffffff;
+    --ion-color-primary-shade: #0272a9;
+    --ion-color-primary-tint:  #0894d6;
+
+    /** primary **/
+    --ion-color-primary: #10b981;                /* emerald-500 */
+    --ion-color-primary-rgb: 16,185,129;
+    --ion-color-primary-contrast: #ffffff;
+    --ion-color-primary-contrast-rgb: 255,255,255;
+    --ion-color-primary-shade: #0ea271;          /* iets donkerder */
+    --ion-color-primary-tint: #34c38f;           /* iets lichter */
+
+    /* Steps (list dividers, borders) – lichte grijstinten */
+    --ion-color-step-50:  #f8fafc; /* slate-50  */
+    --ion-color-step-100: #f1f5f9; /* slate-100 */
+    --ion-color-step-200: #e2e8f0; /* slate-200 */
+    --ion-color-step-300: #cbd5e1; /* slate-300 */
+    --ion-color-step-400: #94a3b8; /* slate-400 */
+    --ion-color-step-500: #64748b; /* slate-500 */
+    --ion-color-step-600: #475569; /* slate-600 */
+    --ion-color-step-700: #334155; /* slate-700 */
+    --ion-color-step-800: #1e293b; /* slate-800 */
+    --ion-color-step-900: #0f172a; /* slate-900 */
+}
+
+/* ---------- DARK (DIM / not-too-dark) ---------- */
+body.dark {
+    /* Lichte dark background & zachte tekst (zinc/slate) */
+    --ion-background-color: #0f172a;      /* custom dim blue/gray base */
+    --ion-text-color:        #f1f5f9;     /* gray-200 */
+
+    /* Toolbar / items / cards (niet te donker) */
+    --ion-toolbar-background: #101826;    /* ~ slate-900 softened */
+    --ion-item-background:    #111827;    /* gray-900 */
+    --ion-card-background:    #111827;
+
+    /* Primary (Tailwind sky-400/500 voor zachter contrast) */
+    --ion-color-primary: #38bdf8;         /* sky-400 */
+    --ion-color-primary-contrast: #0b1220;
+    --ion-color-primary-shade: #2ea3d3;   /* approx sky-500 shade */
+    --ion-color-primary-tint:  #5ccbf9;   /* lighter tint */
+
+    --ion-color-primary: #10b981;
+    --ion-color-primary-rgb: 16,185,129;
+    --ion-color-primary-contrast: #ffffff;
+    --ion-color-primary-contrast-rgb: 255,255,255;
+    --ion-color-primary-shade: #0ea271;
+    --ion-color-primary-tint: #34c38f;
+
+    /* Steps – zachte, niet-volle blacks */
+    --ion-color-step-50:  #0d1523;
+    --ion-color-step-100: #101826; /* toolbar bg */
+    --ion-color-step-200: #111827; /* item/card bg */
+    --ion-color-step-300: #1f2937; /* gray-800 */
+    --ion-color-step-400: #374151; /* gray-700 */
+    --ion-color-step-500: #4b5563; /* gray-600 */
+    --ion-color-step-600: #6b7280; /* gray-500 */
+    --ion-color-step-700: #9ca3af; /* gray-400 */
+    --ion-color-step-800: #d1d5db; /* gray-300 */
+    --ion-color-step-900: #e5e7eb; /* gray-200 */
+}
+
+/* (optioneel) kleine polish voor ion-content achtergrond */
+ion-content {
+  --background: var(--ion-background-color);
+}
