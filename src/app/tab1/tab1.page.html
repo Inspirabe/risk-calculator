@@ -43,24 +43,33 @@
         
         <!-- Compact item met klikbare waarde rechts -->
         <ion-item lines="none" class="py-0">
-            <ion-label class="text-sm">Leverage</ion-label>
+            <ion-label class="font-[0.875rem] font-medium">Leverage</ion-label>
 
             <button type="button"
                     slot="end"
                     (click)="openLeverage()"
                     class="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm font-semibold">
-                {{ lev }}<span class="opacity-70">x</span>
+                {{ leverage }}<span class="opacity-70">x</span>
             </button>
         </ion-item>
 
-
-<!--         
+        <!-- Platform -->
         <ion-item lines="none" class="py-0">
-            <ion-label position="stacked" class="text-xs font-medium">Leverage</ion-label>
-            <ion-input type="number" [(ngModel)]="lev" class="bg-gray-100 dark:bg-gray-800 rounded-md text-sm" style="--padding-start: 0.75rem;">
-            </ion-input>
-        </ion-item> -->
-
+            <ion-label class="font-[0.875rem] font-medium">Platform</ion-label>
+            <ion-select
+                slot="end"
+                interface="popover"
+                [value]="selected_platform"
+                (ionChange)="on_platform_change($event.detail.value)"
+                class="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm font-semibold min-w-[8rem]"
+            >
+                <ion-select-option
+                *ngFor="let p of platforms"
+                [value]="p.id">
+                {{ p.label }}
+                </ion-select-option>
+            </ion-select>
+        </ion-item>
 
       </div>
 

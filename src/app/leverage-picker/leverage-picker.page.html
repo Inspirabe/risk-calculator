@@ -25,7 +25,7 @@
   </div>
 
   <!-- Slider 1..100 -->
-  <div class="px-2">
+  <div class="mx-3">
     <ion-range
       [min]="min" 
       [max]="max" 
@@ -36,14 +36,9 @@
     </ion-range>
 
     <!-- Optioneel: ticks-legend -->
-    <div class="flex justify-between text-xs text-[color:var(--ion-color-medium)] mt-1">
-      <span>1x</span><span>10x</span><span>20x</span><span>30x</span><span>40x</span><span>50x</span><span>100x</span>
+    <div class="flex justify-between text-xs text-[color:var(--ion-color-medium)] mt-1 mx-[-5px]">
+      <span>1</span><span>|</span><span class="ml-[5px]">50</span><span>|</span><span>100</span>
     </div>
-  </div>
-
-  <!-- Info / waarschuwingstekst (optioneel) -->
-  <div class="mt-4 text-sm">
-    <p class="text-red-500">The current position is highly leveraged. Please be cautious of the risk involved.</p>
   </div>
 
   <!-- Onderste overtuigingsknop zoals op je screenshot -->
