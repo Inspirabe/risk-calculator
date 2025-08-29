@@ -1,0 +1,43 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-title>{{ title }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="close(true)">OK</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="p-4">
+  <div class="flex items-center justify-center gap-6 my-4">
+    <ion-button fill="clear" size="large" (click)="dec()" aria-label="decrease">
+      <ion-icon name="remove-outline"></ion-icon>
+    </ion-button>
+
+    <div class="text-6xl font-bold flex items-baseline gap-1">
+      <span class="text-green-500">{{ value }}</span>
+      <span class="opacity-70 text-4xl">%</span>
+    </div>
+
+    <ion-button fill="clear" size="large" (click)="inc()" aria-label="increase">
+      <ion-icon name="add-outline"></ion-icon>
+    </ion-button>
+  </div>
+
+    <div class="mx-3">
+        <ion-range
+            [min]="min" 
+            [max]="max" 
+            [step]="1"
+            [value]="value"
+            (ionChange)="value = +$event.detail.value">
+        </ion-range>
+
+        <div class="flex justify-between text-xs text-[color:var(--ion-color-medium)] mt-1 mx-[-5px]">
+            <span>1%</span><span>|</span><span class="ml-[5px]">10%</span><span>|</span><span>20%</span>
+        </div>
+    </div>
+
+  <div class="p-4">
+    <ion-button expand="block" size="large" (click)="close(true)">OK</ion-button>
+  </div>
+</ion-content>

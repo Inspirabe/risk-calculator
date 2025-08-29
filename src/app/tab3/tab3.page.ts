@@ -1,7 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { ViewWillEnter } from '@ionic/angular';
 import { ModalController } from '@ionic/angular';
+
+import { SettingsService } from '../services/settings.service';
 import { LeveragePickerPage } from '../leverage-picker/leverage-picker.page';
+import { RiskPctPickerPage } from '../risk-pct-picker/risk-pct-picker.page';
+// import { CapitalPage } from '../capital/capital.page';
 
 @Component({
     selector: 'app-tab3',
@@ -11,9 +15,18 @@ import { LeveragePickerPage } from '../leverage-picker/leverage-picker.page';
 })
 
 export class Tab3Page implements OnInit, ViewWillEnter {
-    is_dark_mode: boolean = false;
-    leverage = 20; // default
 
+    constructor(
+        private settings: SettingsService,
+        private modalCtrl: ModalController
+    ) {}
+
+    is_dark_mode: boolean = false;
+    leverage        = 20; 
+    capital         = 1000; 
+    desired_risk    = 1;
+    risk_capital    = (this.capital * (this.desired_risk / 100))
+    
     ngOnInit(): void {
         const stored = localStorage.getItem('pref_dark_mode');
         if (stored !== null) {
@@ -31,11 +44,22 @@ export class Tab3Page implements OnInit, ViewWillEnter {
         });
         }
 
-        // ---- leverage ophalen ----
         const tmp_leverage = localStorage.getItem('pref_leverage');
         if (tmp_leverage !== null) {
             this.leverage = parseInt(tmp_leverage, 10);
         }
+
+        const tmp_capital = localStorage.getItem('capital');
+        if (tmp_capital !== null) {
+            this.capital = parseInt(tmp_capital, 10);
+        }
+        
+        const tmp_desired_risk = localStorage.getItem('desired_risk');
+        if (tmp_desired_risk !== null) {
+            this.desired_risk = parseInt(tmp_desired_risk, 10);
+        }
+        
+        this.recalculate_risk_capital();
     }
 
     ionViewWillEnter(): void {
@@ -45,6 +69,22 @@ export class Tab3Page implements OnInit, ViewWillEnter {
 
         const tmp_leverage = localStorage.getItem('pref_leverage');
         if (tmp_leverage !== null) this.leverage = parseInt(tmp_leverage, 10);
+
+        const tmp_capital = localStorage.getItem('capital');
+        if (tmp_capital !== null) this.capital = parseInt(tmp_capital, 10);
+
+        const tmp_desired_risk = localStorage.getItem('desired_risk');
+        if (tmp_desired_risk !== null) this.desired_risk = parseInt(tmp_desired_risk, 10);
+        this.recalculate_risk_capital();
+
+        this.risk_capital = (this.capital * (this.desired_risk / 100))
+        const tmp_risk_capital = localStorage.getItem('risk_capital');
+        if (tmp_risk_capital !== null) this.risk_capital = parseInt(tmp_risk_capital, 10);
+
+    }
+
+    recalculate_risk_capital(): void{
+        this.risk_capital = (this.capital * (this.desired_risk / 100));
     }
 
     set_dark_mode(dark: boolean): void {
@@ -52,19 +92,45 @@ export class Tab3Page implements OnInit, ViewWillEnter {
         this.apply_theme(dark);
     }
     
-    set_leverage(val: number): void {
-        this.leverage = val;
-        localStorage.setItem('pref_leverage', String(val));
+    async openRiskPct() {
+        const modal = await this.modalCtrl.create({
+            component: RiskPctPickerPage,
+            componentProps: { value: this.desired_risk, min: 1, max: 20, title: 'Edit Desired Risk' },
+            breakpoints: [0, 0.4, 0.9],
+            initialBreakpoint: 0.9,
+        });
+
+        modal.onDidDismiss().then(({ data }) => {
+            if (typeof data === 'number') {
+                this.desired_risk = data;
+                localStorage.setItem('desired_risk', String(data));
+                this.recalculate_risk_capital();
+            }
+        });
+
+        await modal.present();
     }
 
-    private apply_theme(dark: boolean): void {
-        document.body.classList.toggle('dark', dark);            // Ionic vars
-        document.documentElement.classList.toggle('dark', dark); // Tailwind
-        document.documentElement.setAttribute('color-theme', dark ? 'dark' : 'light');
+    async openCapital() {
+        // const modal = await this.modalCtrl.create({
+        //     component: CapitalPage,
+        //     componentProps: { value: this.capital, min: 1000, max: 100000, title: 'Edit Capital' },
+        //     breakpoints: [0, 0.4, 0.9],
+        //     initialBreakpoint: 0.9,
+        // });
+
+        // modal.onDidDismiss().then(({ data }) => {
+        //     if (typeof data === 'number') {
+        //         this.desired_risk = data;
+        //         localStorage.setItem('desired_risk', String(data));
+        //         this.recalculate_risk_capital();
+        //     }
+        // });
+
+        // await modal.present();
     }
 
-    constructor(private modalCtrl: ModalController) {}
-
+    
     async openLeverage() {
         const modal = await this.modalCtrl.create({
             component: LeveragePickerPage,
@@ -76,10 +142,36 @@ export class Tab3Page implements OnInit, ViewWillEnter {
         modal.onDidDismiss().then(({ data }) => {
             if (typeof data === 'number') {
                 this.leverage = data;
-                localStorage.setItem('pref_leverage', String(data));   // ✅ HIER TOEVOEGEN
+                localStorage.setItem('pref_leverage', String(data));
             }
         });
 
         await modal.present();
+    }
+
+
+
+
+    
+    formatCurrency(val: number): string {
+        if (val == null) return '';
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            maximumFractionDigits: 0
+        }).format(val);
+    }
+
+    formatPct(val: number): string {
+        if (val == null) return '';
+        return new Intl.NumberFormat('en-US', {
+            style: 'percent',
+            maximumFractionDigits: 0
+        }).format(val / 100); // expects decimal, so divide by 100
+    }
+    private apply_theme(dark: boolean): void {
+        document.body.classList.toggle('dark', dark);            // Ionic vars
+        document.documentElement.classList.toggle('dark', dark); // Tailwind
+        document.documentElement.setAttribute('color-theme', dark ? 'dark' : 'light');
     }
 }

@@ -1,5 +1,8 @@
 import { Component } from '@angular/core';
 import { ModalController } from '@ionic/angular';
+
+import { SettingsService } from '../services/settings.service';
+
 import { LeveragePickerPage } from '../leverage-picker/leverage-picker.page';
 
 @Component({
@@ -9,30 +12,32 @@ import { LeveragePickerPage } from '../leverage-picker/leverage-picker.page';
   standalone: false,
 })
 export class Tab1Page {
-    entry = 100;
-    stop = 95;
-    tp = 110;
-    leverage = 20;
 
-    // Deze zou je uit Settings / Capital kunnen ophalen via service of store:
-    capital = 1000;     // demo
-    riskPct = 0;
+    constructor(
+        private settings: SettingsService,
+        private modalCtrl: ModalController
+    ) {}
 
-    // lijst met platforms en fees
-    platforms = [
-        { id: 'bingx',   label: 'BingX',    maker_fee: 0.02, taker_fee: 0.05 },
-        { id: 'bybit',   label: 'Bybit',    maker_fee: 0.02, taker_fee: 0.055 },
-        { id: 'binance', label: 'Binance',  maker_fee: 0.02, taker_fee: 0.06 },
-        { id: 'okx',     label: 'OKX',      maker_fee: 0.02, taker_fee: 0.06 },
-        { id: 'gmx',     label: 'GMX',      maker_fee: 0.04, taker_fee: 0.06 },
-        // voeg er gerust meer bij
-    ];
+    entry_price: number                     = 0;
+    stop_loss_price: number                 = 0;
+    take_profit: number                     = 0;
+    leverage: number                        = 20;
+    capital: number                         = 1000;
+    desired_risk: number                    = 1;
+    reward_risk: number                     = 0;
 
-    // selectie + “hidden” fee-waarden
+    distance_to_take_profit: number         = 0;
+    distance_to_stop_loss: number           = 0;
+    distance_to_take_profit_amount: number  = 0;
+    position_size: number                   = 0;
+    maker_fee: number                       = 0.02; // %
+    taker_fee: number                       = 0.05; // %
+    risk_capital: number                    = 0;
+    recommended_leverage: number            = 0;
+    margin_cost: number                     = 0;
+
     selected_platform: string = 'bingx';
-    maker_fee: number = 0.02; // %
-    taker_fee: number = 0.05; // %
-
+    platforms = this.settings.platforms;
 
     ngOnInit(): void {
         // ---- leverage ophalen ----
@@ -42,9 +47,10 @@ export class Tab1Page {
         }
 
         // ---- platform + fees ophalen ----
-        const stored_platform = localStorage.getItem('pref_platform');
-        const stored_maker = localStorage.getItem('pref_maker_fee');
-        const stored_taker = localStorage.getItem('pref_taker_fee');
+        const stored_platform   = localStorage.getItem('pref_platform');
+        const stored_maker      = localStorage.getItem('pref_maker_fee');
+        const stored_taker      = localStorage.getItem('pref_taker_fee');
+
         if (stored_platform) {
             this.selected_platform = stored_platform;
             // fees uit storage of fallback naar lijst
@@ -57,10 +63,11 @@ export class Tab1Page {
             }
         } else {
             // init defaults wegschrijven
-            localStorage.setItem('pref_platform', this.selected_platform);
+            localStorage.setItem('pref_platform', String(this.selected_platform));
             localStorage.setItem('pref_maker_fee', String(this.maker_fee));
             localStorage.setItem('pref_taker_fee', String(this.taker_fee));
         }
+        this.calc();
     }
 
 
@@ -78,18 +85,93 @@ export class Tab1Page {
     }
 
     calc() {
-        const riskPerUnit = Math.abs(this.entry - this.stop);
-        if (riskPerUnit === 0) { this.riskPct = 0; return; }
-        const positionSize = (this.capital * 0.01 * this.leverage) / riskPerUnit; // bv. 1% baseline
-        const riskAmount = positionSize * riskPerUnit;
-        this.riskPct = (riskAmount / this.capital) * 100;
+        const tmp_capital = localStorage.getItem('capital');
+        if (tmp_capital !== null) {
+            this.capital = parseInt(tmp_capital, 10);
+        }
+        const tmp_desired_risk = localStorage.getItem('desired_risk');
+        if (tmp_desired_risk !== null) {
+            this.desired_risk = parseInt(tmp_desired_risk, 10);
+        }
+        const calc_desired_risk             = (this.desired_risk / 100)
+        const calc_maker_fee                = (this.maker_fee / 100)
+        const calc_taker_fee                = (this.taker_fee / 100)
+        const calc_risk_capital             = (this.capital * (this.desired_risk / 100));
+
+        this.distance_to_take_profit = Math.abs((this.entry_price - this.take_profit) / this.entry_price);
+        console.log('distance_to_take_profit: ' + this.distance_to_take_profit);
+
+        this.distance_to_stop_loss = (Math.abs((this.entry_price - this.stop_loss_price) / this.entry_price));
+        console.log('distance_to_stop_loss: ' + this.distance_to_stop_loss);
+
+        this.position_size = (this.capital*calc_desired_risk)/((calc_maker_fee+calc_taker_fee)+(1-calc_taker_fee)*this.distance_to_stop_loss);
+        this.position_size = Number.isFinite((this.position_size))
+            ? this.position_size
+            : 0;
+        console.log('position_size: ' + this.position_size);
+
+        this.distance_to_take_profit_amount = ((this.position_size+(this.position_size*this.distance_to_take_profit))-this.position_size*calc_maker_fee-((this.position_size+(this.position_size*this.distance_to_take_profit))*calc_taker_fee)-this.position_size);
+        console.log('distance_to_take_profit_amount: ' + this.distance_to_take_profit_amount);
+
+        this.reward_risk = (this.distance_to_take_profit_amount / calc_risk_capital);
+        this.reward_risk = Number.isFinite((this.reward_risk))
+            ? this.reward_risk
+            : 0;
+        console.log('reward_risk: ' + this.reward_risk);
+
+        this.recommended_leverage = this.get_recommended_leverage(this.distance_to_stop_loss);
+        console.log('recommended_leverage: ' + this.recommended_leverage);
+
+        this.margin_cost = this.position_size / this.leverage;
+        // console.log('margin_cost: ' + this.margin_cost);
+
+        if (Number.isFinite(this.recommended_leverage)) {
+            this.recommended_leverage = 0;
+        }
+
     }
+
+    get_recommended_leverage(distance_to_sl: number): number {
+        if (distance_to_sl < 0.01) {
+            distance_to_sl = distance_to_sl * 100;
+        }
+
+        const leverage_table = [
+            { max: 0.52, lev: 75 },
+            { max: 1.00, lev: 50 },
+            { max: 1.52, lev: 35 },
+            { max: 2.25, lev: 25 },
+            { max: 3.00, lev: 15 },
+        ];
+        
+        // distance_to_sl hier als percentage, bv. 1.23 voor 1.23%
+        for (const row of leverage_table) {
+            if (distance_to_sl <= row.max) {
+                return row.lev;
+            }
+        }
+        return 15; // minimum
+    }
+
 
     reset() {
-        this.entry = 100; this.stop = 95; this.tp = 110; this.leverage = 1; this.riskPct = 0;
+        this.entry_price            = 0; 
+        this.stop_loss_price        = 0; 
+        this.take_profit            = 0; 
+        this.leverage               = 0; 
+        this.reward_risk            = 0;
+        this.position_size          = 0;
+        this.recommended_leverage   = 0;
+        this.margin_cost            = 0;
+        
+        const tmp_leverage = localStorage.getItem('pref_leverage');
+        if (tmp_leverage !== null) {
+            this.leverage = parseInt(tmp_leverage, 10);
+        }
+        // this.entry_price            = 4.78;
+        // this.stop_loss_price        = 4.75;
+        // this.take_profit            = 4.97;
     }
-
-    constructor(private modalCtrl: ModalController) {}
 
     async openLeverage() {
         const modal = await this.modalCtrl.create({
@@ -105,4 +187,15 @@ export class Tab1Page {
 
         await modal.present();
     }
+
+    private toNum(v: any): number {
+        // accepteer "123,45" en "123.45", lege -> NaN
+        if (v === null || v === undefined) return NaN;
+        if (typeof v === 'string') v = v.replace(',', '.').trim();
+        const n = Number(v);
+        return Number.isFinite(n) ? n : NaN;
+    }
+
+    private isPos(n: number) { return Number.isFinite(n) && n > 0; }
+
 }

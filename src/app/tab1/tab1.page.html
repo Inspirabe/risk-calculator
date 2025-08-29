@@ -20,27 +20,25 @@
         
         <ion-item lines="none" class="py-0">
             <ion-label position="stacked" class="text-xs font-medium">Entry Price</ion-label>
-            <ion-input type="number" [(ngModel)]="entry" class="bg-gray-100 dark:bg-gray-800 rounded-md text-sm" style="--padding-start: 0.75rem;">
+            <ion-input type="number" inputmode="decimal" [(ngModel)]="entry_price" class="bg-gray-100 dark:bg-gray-800 rounded-md text-sm" style="--padding-start: 0.75rem;">
                 <div slot="end" class="flex items-center justify-center w-6 text-gray-500 dark:text-gray-400 dark:text-gray-400">$</div>
             </ion-input>
         </ion-item>
 
         <ion-item lines="none" class="py-0">
             <ion-label position="stacked" class="text-xs font-medium">Take Profit</ion-label>
-            <ion-input type="number" [(ngModel)]="tp" class="bg-gray-100 dark:bg-gray-800 rounded-md text-sm" style="--padding-start: 0.75rem;">
+            <ion-input type="number" inputmode="decimal" [(ngModel)]="take_profit" class="bg-gray-100 dark:bg-gray-800 rounded-md text-sm" style="--padding-start: 0.75rem;">
                 <div slot="end" class="flex items-center justify-center w-6 text-gray-500 dark:text-gray-400">$</div>
             </ion-input>
         </ion-item>
 
         <ion-item lines="none" class="py-0">
             <ion-label position="stacked" class="text-xs font-medium">Stop Loss</ion-label>
-            <ion-input type="number" [(ngModel)]="stop" class="bg-gray-100 dark:bg-gray-800 rounded-md text-sm" style="--padding-start: 0.75rem;">
+            <ion-input type="number" inputmode="decimal" [(ngModel)]="stop_loss_price" class="bg-gray-100 dark:bg-gray-800 rounded-md text-sm" style="--padding-start: 0.75rem;">
                 <div slot="end" class="flex items-center justify-center w-6 text-gray-500 dark:text-gray-400">$</div>
             </ion-input>
         </ion-item>
 
-
-        
         <!-- Compact item met klikbare waarde rechts -->
         <ion-item lines="none" class="py-0">
             <ion-label class="font-[0.875rem] font-medium">Leverage</ion-label>
@@ -74,16 +72,51 @@
       </div>
 
 
-      <div class="flex items-center gap-3 mt-4">
+      <div class="flex items-center gap-3 mt-1">
         <ion-button expand="block" class="flex-1" (click)="calc()">Calculate</ion-button>
         <ion-button fill="outline" class="flex-1" (click)="reset()">Reset</ion-button>
       </div>
     </ion-card>
 
-    <ion-card class="p-4 rounded-2xl">
-      <h3 class="text-lg font-medium mb-1">Result</h3>
-      <p class="text-muted">Risk % (vs. capital settings):</p>
-      <p class="text-3xl font-bold">{{ riskPct | number:'1.2-2' }}%</p>
+    <!-- 
+        > 2 bg-green-100 
+        > 1-2 bg-yellow-100
+        < 1 bg-red-100  
+    -->
+    <ion-card 
+        class="p-4 rounded-2xl"
+        [ngClass]="{
+            'bg-white': reward_risk === 0,
+            'bg-green-100': reward_risk > 2,
+            'bg-yellow-100': reward_risk > 1 && reward_risk <= 2,
+            'bg-red-100': reward_risk > 0 && reward_risk <= 1
+        }">
+        <div class="grid grid-cols-1 text-center">
+            <p class="text-muted">Reward : Risk</p>
+            <p 
+            class="text-3xl font-bold text-center"
+            [ngClass]="{
+                'text-green-600': reward_risk > 2,
+                'text-yellow-600': reward_risk > 1 && reward_risk <= 2,
+                'text-red-600': reward_risk > 0 && reward_risk <= 1
+            }">{{ reward_risk | number:'1.2-2' }}</p>
+            <p class="text-muted">Position size</p>
+            <p 
+            class="text-3xl font-bold text-center"
+            [ngClass]="{
+                'text-green-600': reward_risk > 2,
+                'text-yellow-600': reward_risk > 1 && reward_risk <= 2,
+                'text-red-600': reward_risk > 0 && reward_risk <= 1
+            }">{{ position_size | number:'1.2-2' }} $</p>
+        </div>
+
+        <div class="grid grid-cols-2 text-center">
+            <p class="text-muted">Recom. Leverage</p>
+            <p class="text-muted">Margin cost</p>
+            <p class="font-bold">{{ recommended_leverage | number:'1.0-0' }}</p>
+            <p class="font-bold">{{ margin_cost | number:'1.2-2' }} $</p>
+        </div>
+        
     </ion-card>
   </div>
 </ion-content>

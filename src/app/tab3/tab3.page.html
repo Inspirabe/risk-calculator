@@ -14,7 +14,7 @@
     </ion-item>
 
     <ion-item lines="full">
-      <ion-label>Dark mode</ion-label>
+      <ion-label>Dark Mode</ion-label>
       <ion-toggle
         slot="end"
         [(ngModel)]="is_dark_mode"
@@ -22,8 +22,36 @@
       </ion-toggle>
     </ion-item>
 
-    <!-- Compact item met klikbare waarde rechts -->
-    <ion-item lines="none" class="py-0">
+    <ion-item lines="full">
+        <ion-label class="w-50">Capital</ion-label>
+        <button
+            type="button"
+            slot="end"
+            (click)="openCapital()"
+            class="bg-gray-100 dark:bg-gray-800 rounded-md text-sm text-right w-auto p-2">
+            {{ formatCurrency(capital) }}
+        </button>
+    </ion-item>
+
+    <ion-item lines="full">
+        <ion-label class="w-50">Desired Risk</ion-label>
+        <button
+            type="button"
+            slot="end"
+            (click)="openRiskPct()"
+            class="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm font-semibold">
+            {{ desired_risk }}<span class="opacity-70">%</span>
+        </button>
+    </ion-item>
+
+    <ion-item lines="full">
+        <ion-label class="w-50">Capital at Risk</ion-label>
+        <p slot="end" class="rounded-md text-sm text-right w-auto p-2" >
+            {{ formatCurrency(risk_capital) }}
+        </p>
+    </ion-item>
+
+    <ion-item lines="full" class="py-0">
         <ion-label>Default Leverage</ion-label>
         <button type="button"
                 slot="end"
@@ -32,6 +60,7 @@
             {{ leverage }}<span class="opacity-70">x</span>
         </button>
     </ion-item>
+
     
   </ion-list>
 </ion-content>
