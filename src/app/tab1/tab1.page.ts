@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { ModalController } from '@ionic/angular';
 
 import { SettingsService } from '../services/settings.service';
-
 import { LeveragePickerPage } from '../leverage-picker/leverage-picker.page';
 
 @Component({
@@ -11,12 +10,16 @@ import { LeveragePickerPage } from '../leverage-picker/leverage-picker.page';
   styleUrls: ['tab1.page.css'],
   standalone: false,
 })
-export class Tab1Page {
 
+export class Tab1Page {
     constructor(
-        private settings: SettingsService,
+        public settings: SettingsService,
         private modalCtrl: ModalController
     ) {}
+
+    entry_price_raw: string = '';
+    stop_loss_price_raw: string = '';
+    take_profit_raw: string = '';
 
     entry_price: number                     = 0;
     stop_loss_price: number                 = 0;
@@ -33,7 +36,7 @@ export class Tab1Page {
     maker_fee: number                       = 0.02; // %
     taker_fee: number                       = 0.05; // %
     risk_capital: number                    = 0;
-    recommended_leverage: number            = 0;
+    recommended_leverage: number            = 10;
     margin_cost: number                     = 0;
 
     selected_platform: string = 'bingx';
@@ -123,25 +126,21 @@ export class Tab1Page {
         console.log('recommended_leverage: ' + this.recommended_leverage);
 
         this.margin_cost = this.position_size / this.leverage;
-        // console.log('margin_cost: ' + this.margin_cost);
-
-        if (Number.isFinite(this.recommended_leverage)) {
-            this.recommended_leverage = 0;
-        }
-
     }
 
     get_recommended_leverage(distance_to_sl: number): number {
-        if (distance_to_sl < 0.01) {
+        if (distance_to_sl < 0.50) {
             distance_to_sl = distance_to_sl * 100;
         }
+
+        console.log(distance_to_sl);
 
         const leverage_table = [
             { max: 0.52, lev: 75 },
             { max: 1.00, lev: 50 },
             { max: 1.52, lev: 35 },
             { max: 2.25, lev: 25 },
-            { max: 3.00, lev: 15 },
+            { max: 3.00, lev: 10 },
         ];
         
         // distance_to_sl hier als percentage, bv. 1.23 voor 1.23%
@@ -150,18 +149,24 @@ export class Tab1Page {
                 return row.lev;
             }
         }
-        return 15; // minimum
+        // Minimale waarde van leverage_table.lev
+        return Math.min(...leverage_table.map(r => r.lev));
     }
 
-
     reset() {
+        // clear what the user sees (inputs)
+        this.entry_price_raw = '';
+        this.stop_loss_price_raw = '';
+        this.take_profit_raw = '';
+
+        // clear numeric models
         this.entry_price            = 0; 
         this.stop_loss_price        = 0; 
         this.take_profit            = 0; 
         this.leverage               = 0; 
         this.reward_risk            = 0;
         this.position_size          = 0;
-        this.recommended_leverage   = 0;
+        this.recommended_leverage   = 10;
         this.margin_cost            = 0;
         
         const tmp_leverage = localStorage.getItem('pref_leverage');
@@ -171,6 +176,34 @@ export class Tab1Page {
         // this.entry_price            = 4.78;
         // this.stop_loss_price        = 4.75;
         // this.take_profit            = 4.97;
+    }
+
+    onEntryBlur() {
+        const n = this.toNum(this.entry_price_raw);
+        this.entry_price = Number.isFinite(n) ? n : 0;
+        this.calc();
+    }
+
+    onStopLossBlur() {
+        const n = this.toNum(this.stop_loss_price_raw);
+        this.stop_loss_price = Number.isFinite(n) ? n : 0;
+        this.calc();
+    }
+
+    onTakeProfitBlur() {
+        const n = this.toNum(this.take_profit_raw);
+        this.take_profit = Number.isFinite(n) ? n : 0;
+        this.calc();
+    }
+
+    applyRecommendedLeverage(): void {
+        const lev = Math.round(this.recommended_leverage || 0);
+        if (!Number.isFinite(lev) || lev <= 0) return;
+
+        this.leverage = lev;
+        localStorage.setItem('pref_leverage', String(lev));
+
+        this.calc();
     }
 
     async openLeverage() {
@@ -186,6 +219,16 @@ export class Tab1Page {
         });
 
         await modal.present();
+    }
+
+    async selectAll(ev: CustomEvent) {
+        const el = ev.target as HTMLIonInputElement;
+        if (!('getInputElement' in el)) return;
+        const input = await (el as any).getInputElement();
+        setTimeout(() => {
+            const v = input.value ?? '';
+            try { input.setSelectionRange(0, String(v).length); } catch {}
+        }, 0);
     }
 
     private toNum(v: any): number {

@@ -11,82 +11,79 @@
   <app-explore-container name="Tab 1 page"></app-explore-container>
 </ion-content> -->
 
-<ion-content [fullscreen]="true" class="p-4">
-  <div class="space-y-4 max-w-xl mx-auto">
-    <ion-card class="p-4 rounded-2xl shadow">
-      <h2 class="text-xl font-semibold mb-2">Trade</h2>
+<!-- <ion-content [fullscreen]="true" class="p-0"> -->
+    
+<ion-content [fullscreen]="true">
+    <ion-list inset="true">
+        <ion-item lines="full">
+            <ion-label class="font-semibold">Trade</ion-label>
+        </ion-item>
 
-      <div class="grid grid-cols-1 gap-1">
-        
-        <ion-item lines="none" class="py-0">
+        <ion-item lines="none">
             <ion-label position="stacked" class="text-xs font-medium">Entry Price</ion-label>
-            <ion-input type="number" inputmode="decimal" [(ngModel)]="entry_price" class="bg-gray-100 dark:bg-gray-800 rounded-md text-sm" style="--padding-start: 0.75rem;">
-                <div slot="end" class="flex items-center justify-center w-6 text-gray-500 dark:text-gray-400 dark:text-gray-400">$</div>
+            <ion-input 
+                type="text" 
+                placeholder="0"
+                inputmode="decimal" 
+                enterkeyhint="done"
+                (ionBlur)="onEntryBlur()"
+                (ionFocus)="selectAll($event)"
+                [(ngModel)]="entry_price_raw" 
+                [clearInput]="true"
+                class="bg-gray-100 dark:bg-gray-800 rounded-md text-sm" 
+                style="--padding-start: 0.75rem;"
+                >
+                <div slot="start" class="flex items-center justify-center w-6 text-gray-500 dark:text-gray-400">$</div>
             </ion-input>
         </ion-item>
 
-        <ion-item lines="none" class="py-0">
+        <ion-item lines="none">
             <ion-label position="stacked" class="text-xs font-medium">Take Profit</ion-label>
-            <ion-input type="number" inputmode="decimal" [(ngModel)]="take_profit" class="bg-gray-100 dark:bg-gray-800 rounded-md text-sm" style="--padding-start: 0.75rem;">
-                <div slot="end" class="flex items-center justify-center w-6 text-gray-500 dark:text-gray-400">$</div>
+            <ion-input 
+                type="text" 
+                placeholder="0"
+                inputmode="decimal" 
+                enterkeyhint="done"
+                (ionBlur)="onTakeProfitBlur()"
+                (ionFocus)="selectAll($event)"
+                [(ngModel)]="take_profit_raw" 
+                [clearInput]="true"
+                class="bg-gray-100 dark:bg-gray-800 rounded-md text-sm" 
+                style="--padding-start: 0.75rem;"
+                >
+                <div slot="start" class="flex items-center justify-center w-6 text-gray-500 dark:text-gray-400">$</div>
             </ion-input>
         </ion-item>
 
-        <ion-item lines="none" class="py-0">
+        <ion-item lines="none">
             <ion-label position="stacked" class="text-xs font-medium">Stop Loss</ion-label>
-            <ion-input type="number" inputmode="decimal" [(ngModel)]="stop_loss_price" class="bg-gray-100 dark:bg-gray-800 rounded-md text-sm" style="--padding-start: 0.75rem;">
-                <div slot="end" class="flex items-center justify-center w-6 text-gray-500 dark:text-gray-400">$</div>
+            <ion-input 
+                type="text" 
+                placeholder="0"
+                inputmode="decimal" 
+                enterkeyhint="done"
+                (ionBlur)="onStopLossBlur()"
+                (ionFocus)="selectAll($event)"
+                [(ngModel)]="stop_loss_price_raw" 
+                [clearInput]="true"
+                class="bg-gray-100 dark:bg-gray-800 rounded-md text-sm" 
+                style="--padding-start: 0.75rem;"
+                >
+                <div slot="start" class="flex items-center justify-center w-6 text-gray-500 dark:text-gray-400">$</div>
             </ion-input>
         </ion-item>
 
-        <!-- Compact item met klikbare waarde rechts -->
-        <ion-item lines="none" class="py-0">
-            <ion-label class="font-[0.875rem] font-medium">Leverage</ion-label>
-
-            <button type="button"
-                    slot="end"
-                    (click)="openLeverage()"
-                    class="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm font-semibold">
-                {{ leverage }}<span class="opacity-70">x</span>
-            </button>
-        </ion-item>
-
-        <!-- Platform -->
-        <ion-item lines="none" class="py-0">
-            <ion-label class="font-[0.875rem] font-medium">Platform</ion-label>
-            <ion-select
-                slot="end"
-                interface="popover"
-                [value]="selected_platform"
-                (ionChange)="on_platform_change($event.detail.value)"
-                class="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm font-semibold min-w-[8rem]"
-            >
-                <ion-select-option
-                *ngFor="let p of platforms"
-                [value]="p.id">
-                {{ p.label }}
-                </ion-select-option>
-            </ion-select>
-        </ion-item>
-
-      </div>
+        <div class="flex items-center gap-3 my-2 px-2">
+            <ion-button expand="block" class="flex-1" (click)="calc()">Calculate</ion-button>
+            <ion-button fill="outline" class="flex-1" (click)="reset()">Reset</ion-button>
+        </div>
+    </ion-list>
 
 
-      <div class="flex items-center gap-3 mt-1">
-        <ion-button expand="block" class="flex-1" (click)="calc()">Calculate</ion-button>
-        <ion-button fill="outline" class="flex-1" (click)="reset()">Reset</ion-button>
-      </div>
-    </ion-card>
-
-    <!-- 
-        > 2 bg-green-100 
-        > 1-2 bg-yellow-100
-        < 1 bg-red-100  
-    -->
     <ion-card 
-        class="p-4 rounded-2xl"
+        class="p-3 my-2 rounded-2xl"
         [ngClass]="{
-            'bg-white': reward_risk === 0,
+            'bg-white dark:bg-gray-800': reward_risk === 0,
             'bg-green-100': reward_risk > 2,
             'bg-yellow-100': reward_risk > 1 && reward_risk <= 2,
             'bg-red-100': reward_risk > 0 && reward_risk <= 1
@@ -111,12 +108,51 @@
         </div>
 
         <div class="grid grid-cols-2 text-center">
-            <p class="text-muted">Recom. Leverage</p>
+            <p class="text-muted" (click)="applyRecommendedLeverage()">Recom. Leverage</p>
             <p class="text-muted">Margin cost</p>
-            <p class="font-bold">{{ recommended_leverage | number:'1.0-0' }}</p>
+            <p class="font-bold" (click)="applyRecommendedLeverage()">{{ recommended_leverage | number:'1.0-0' }}</p>
             <p class="font-bold">{{ margin_cost | number:'1.2-2' }} $</p>
         </div>
-        
     </ion-card>
-  </div>
+
+    <ion-list inset="true">
+        <!-- <ion-item lines="full">
+            <ion-label class="font-semibold">Logging</ion-label>
+        </ion-item> -->
+
+        <!-- Compact item met klikbare waarde rechts -->
+        <ion-item lines="none" class="py-0">
+            <ion-label class="font-[0.875rem] font-medium">Leverage</ion-label>
+
+            <button type="button"
+                    slot="end"
+                    (click)="openLeverage()"
+                    class="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm font-semibold">
+                {{ leverage }}<span class="opacity-70">x</span>
+            </button>
+        </ion-item>
+
+        <!-- Platform -->
+        <ion-item lines="none" class="py-0">
+            <ion-label class="font-[0.875rem] font-medium">Platform</ion-label>
+            <ion-select
+                slot="end"
+                interface="popover"
+                [value]="selected_platform"
+                (ionChange)="on_platform_change($event.detail.value)"
+                class="px-3 py-0 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm font-semibold min-w-[8rem]"
+                >
+                <ion-select-option
+                    *ngFor="let p of settings.platforms"
+                    [value]="p.id">
+                    {{ p.label }}
+                </ion-select-option>
+            </ion-select>
+        </ion-item>
+
+        <div class="flex items-center gap-3 mt-0 mb-3 px-2">
+            <ion-button expand="block" class="flex-1" (click)="reset()">+ Log Trade</ion-button>
+        </div>
+    </ion-list>
+
 </ion-content>

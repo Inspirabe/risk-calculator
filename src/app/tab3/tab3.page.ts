@@ -5,7 +5,7 @@ import { ModalController } from '@ionic/angular';
 import { SettingsService } from '../services/settings.service';
 import { LeveragePickerPage } from '../leverage-picker/leverage-picker.page';
 import { RiskPctPickerPage } from '../risk-pct-picker/risk-pct-picker.page';
-// import { CapitalPage } from '../capital/capital.page';
+import { CapitalPickerPage } from '../capital-picker/capital-picker.page';
 
 @Component({
     selector: 'app-tab3',
@@ -17,16 +17,16 @@ import { RiskPctPickerPage } from '../risk-pct-picker/risk-pct-picker.page';
 export class Tab3Page implements OnInit, ViewWillEnter {
 
     constructor(
-        private settings: SettingsService,
+        public settings: SettingsService,
         private modalCtrl: ModalController
     ) {}
 
     is_dark_mode: boolean = false;
-    leverage        = 20; 
-    capital         = 1000; 
-    desired_risk    = 1;
-    risk_capital    = (this.capital * (this.desired_risk / 100))
-    
+    leverage: number      = 20; 
+    // capital         = 1000; 
+    desired_risk: number    = 1;
+    risk_capital: number    = (this.settings.capital * (this.desired_risk / 100))
+
     ngOnInit(): void {
         const stored = localStorage.getItem('pref_dark_mode');
         if (stored !== null) {
@@ -49,10 +49,6 @@ export class Tab3Page implements OnInit, ViewWillEnter {
             this.leverage = parseInt(tmp_leverage, 10);
         }
 
-        const tmp_capital = localStorage.getItem('capital');
-        if (tmp_capital !== null) {
-            this.capital = parseInt(tmp_capital, 10);
-        }
         
         const tmp_desired_risk = localStorage.getItem('desired_risk');
         if (tmp_desired_risk !== null) {
@@ -71,20 +67,20 @@ export class Tab3Page implements OnInit, ViewWillEnter {
         if (tmp_leverage !== null) this.leverage = parseInt(tmp_leverage, 10);
 
         const tmp_capital = localStorage.getItem('capital');
-        if (tmp_capital !== null) this.capital = parseInt(tmp_capital, 10);
+        if (tmp_capital !== null) this.settings.capital = parseInt(tmp_capital, 10);
 
         const tmp_desired_risk = localStorage.getItem('desired_risk');
         if (tmp_desired_risk !== null) this.desired_risk = parseInt(tmp_desired_risk, 10);
         this.recalculate_risk_capital();
 
-        this.risk_capital = (this.capital * (this.desired_risk / 100))
-        const tmp_risk_capital = localStorage.getItem('risk_capital');
-        if (tmp_risk_capital !== null) this.risk_capital = parseInt(tmp_risk_capital, 10);
+        // this.risk_capital = (this.capital * (this.desired_risk / 100))
+        // const tmp_risk_capital = localStorage.getItem('risk_capital');
+        // if (tmp_risk_capital !== null) this.risk_capital = parseInt(tmp_risk_capital, 10);
 
     }
 
     recalculate_risk_capital(): void{
-        this.risk_capital = (this.capital * (this.desired_risk / 100));
+        // this.risk_capital = (this.capital * (this.desired_risk / 100));
     }
 
     set_dark_mode(dark: boolean): void {
@@ -112,22 +108,21 @@ export class Tab3Page implements OnInit, ViewWillEnter {
     }
 
     async openCapital() {
-        // const modal = await this.modalCtrl.create({
-        //     component: CapitalPage,
-        //     componentProps: { value: this.capital, min: 1000, max: 100000, title: 'Edit Capital' },
-        //     breakpoints: [0, 0.4, 0.9],
-        //     initialBreakpoint: 0.9,
-        // });
+        const modal = await this.modalCtrl.create({
+            component: CapitalPickerPage,
+            componentProps: { value: this.settings.capital, min: 1000, max: 100000, title: 'Edit Capital' },
+            breakpoints: [0, 0.4, 0.9],
+            initialBreakpoint: 0.9,
+        });
 
-        // modal.onDidDismiss().then(({ data }) => {
-        //     if (typeof data === 'number') {
-        //         this.desired_risk = data;
-        //         localStorage.setItem('desired_risk', String(data));
-        //         this.recalculate_risk_capital();
-        //     }
-        // });
+        modal.onDidDismiss().then(({ data }) => {
+            if (typeof data === 'number') {
+                this.settings.capital = data;
+                localStorage.setItem('capital', String(data));
+            }
+        });
 
-        // await modal.present();
+        await modal.present();
     }
 
     

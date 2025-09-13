@@ -46,7 +46,6 @@
       type="number"
       inputmode="decimal"
       [value]="value"
-      (ionBlur)="value = Math.min(max, Math.max(min, +($event.target as HTMLInputElement).value || 0))"
       class="bg-gray-100 dark:bg-gray-800 rounded-md text-right"
       style="--padding-end: .75rem;">
       <span slot="end" class="w-5 text-[var(--ion-color-medium)]">$</span>
