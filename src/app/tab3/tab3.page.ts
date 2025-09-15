@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ViewWillEnter } from '@ionic/angular';
 import { ModalController } from '@ionic/angular';
 
-import { SettingsService } from '../services/settings.service';
+import { SettingsService } from '../../services/settings.service';
 import { LeveragePickerPage } from '../leverage-picker/leverage-picker.page';
 import { RiskPctPickerPage } from '../risk-pct-picker/risk-pct-picker.page';
 import { CapitalPickerPage } from '../capital-picker/capital-picker.page';
@@ -21,35 +21,65 @@ export class Tab3Page implements OnInit, ViewWillEnter {
         private modalCtrl: ModalController
     ) {}
 
-    is_dark_mode: boolean = false;
-    leverage: number      = 20; 
-    // capital         = 1000; 
-    desired_risk: number    = 1;
-    risk_capital: number    = (this.settings.capital * (this.desired_risk / 100))
+    is_dark_mode: boolean       = false;
+    leverage: number            = 20; 
+    desired_risk: number        = 1;
+    risk_capital: number        = (this.settings.capital * (this.desired_risk / 100))
+    // selected_platform: string   = 'bingx';
+    platforms                   = this.settings.platforms;
 
-    ngOnInit(): void {
+    async ngOnInit(): Promise<void> {
+        await this.settings.loadPlatforms();
+
         const stored = localStorage.getItem('pref_dark_mode');
         if (stored !== null) {
-        this.is_dark_mode = stored === 'true';
+            this.is_dark_mode = stored === 'true';
         } else {
-        this.is_dark_mode = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+            this.is_dark_mode = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
         }
         this.apply_theme(this.is_dark_mode);
 
         if (stored === null && window.matchMedia) {
-        const mq = window.matchMedia('(prefers-color-scheme: dark)');
-        mq.addEventListener?.('change', (e) => {
-            this.is_dark_mode = e.matches;
-            this.apply_theme(this.is_dark_mode);
-        });
+            const mq = window.matchMedia('(prefers-color-scheme: dark)');
+            mq.addEventListener?.('change', (e) => {
+                this.is_dark_mode = e.matches;
+                this.apply_theme(this.is_dark_mode);
+            });
         }
 
+        console.log(this.settings.selected_platform);
+
+        // const stored_platform   = this.settings.selected_platform;
+        // const stored_maker_fee  = this.settings.maker_fee;
+        // const stored_taker_fee  = this.settings.taker_fee;
+
+        // if (stored_platform) {
+        //     // this.selected_platform = stored_platform;
+        //     // fees uit storage of fallback naar lijst
+        //     // if (stored_maker_fee && stored_taker_fee) {
+        //     // } else {
+        //     //     const p = this.platforms.find(x => x.id === stored_platform);
+        //     //     if (p) { 
+        //     //         localStorage.setItem('pref_maker_fee', String(p.maker_fee));
+        //     //         localStorage.setItem('pref_taker_fee', String(p.taker_fee));
+        //     //     }
+        //     // }
+        // } else {
+        //     // init defaults wegschrijven
+        //     // localStorage.setItem('pref_platform', String(this.selected_platform));
+        //     // const p = this.platforms.find(x => x.id === this.selected_platform);
+        //     // if (p) { 
+        //     //     localStorage.setItem('pref_maker_fee', String(p.maker_fee));
+        //     //     localStorage.setItem('pref_taker_fee', String(p.taker_fee));
+        //     // }
+        // }
+
+        
         const tmp_leverage = localStorage.getItem('pref_leverage');
         if (tmp_leverage !== null) {
             this.leverage = parseInt(tmp_leverage, 10);
         }
 
-        
         const tmp_desired_risk = localStorage.getItem('desired_risk');
         if (tmp_desired_risk !== null) {
             this.desired_risk = parseInt(tmp_desired_risk, 10);
@@ -72,7 +102,6 @@ export class Tab3Page implements OnInit, ViewWillEnter {
         const tmp_desired_risk = localStorage.getItem('desired_risk');
         if (tmp_desired_risk !== null) this.desired_risk = parseInt(tmp_desired_risk, 10);
         this.recalculate_risk_capital();
-
         // this.risk_capital = (this.capital * (this.desired_risk / 100))
         // const tmp_risk_capital = localStorage.getItem('risk_capital');
         // if (tmp_risk_capital !== null) this.risk_capital = parseInt(tmp_risk_capital, 10);
@@ -145,9 +174,31 @@ export class Tab3Page implements OnInit, ViewWillEnter {
     }
 
 
-
-
+    on_platform_change(platform_id: string) {
+        this.settings.switchPlatform(platform_id);
+    }
     
+     
+    onClientInput(ev: CustomEvent) {
+        const raw = String(ev.detail?.value ?? '');
+        console.log(raw);
+        this.settings.setClientID(raw);
+        this.settings.user_client_id = raw;
+        console.log(raw);
+    }
+
+    async selectAll(ev: CustomEvent) {
+        const ionInput = ev.target as any;
+        if (!ionInput?.getInputElement) return;
+
+        const input: HTMLInputElement = await ionInput.getInputElement();
+
+        setTimeout(() => {
+            const val = input.value ?? '';
+            try { input.setSelectionRange(0, String(val).length); } catch {}
+        }, 0);
+    }
+
     formatCurrency(val: number): string {
         if (val == null) return '';
         return new Intl.NumberFormat('en-US', {
@@ -164,6 +215,7 @@ export class Tab3Page implements OnInit, ViewWillEnter {
             maximumFractionDigits: 0
         }).format(val / 100); // expects decimal, so divide by 100
     }
+    
     private apply_theme(dark: boolean): void {
         document.body.classList.toggle('dark', dark);            // Ionic vars
         document.documentElement.classList.toggle('dark', dark); // Tailwind

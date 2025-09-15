@@ -8,51 +8,52 @@
 </ion-header>
 
 <ion-content class="p-4">
-  <!-- Big display -->
-  <div class="flex items-center justify-center gap-6 my-4">
-    <ion-button fill="clear" size="large" (click)="dec()" aria-label="decrease">
-      <ion-icon name="remove-outline"></ion-icon>
-    </ion-button>
+    <!-- Big display -->
+    <div class="flex items-center justify-center gap-6 my-4">
+        <ion-button fill="clear" size="large" (click)="dec()" aria-label="decrease">
+            <ion-icon name="remove-outline"></ion-icon>
+        </ion-button>
 
-    <div class="text-5xl md:text-6xl font-bold">
-      {{ formatCurrency(value) }}
+        <div class="text-5xl md:text-6xl font-bold">
+            {{ formatCurrency(value) }}
+        </div>
+
+        <ion-button fill="clear" size="large" (click)="inc()" aria-label="increase">
+            <ion-icon name="add-outline"></ion-icon>
+        </ion-button>
     </div>
 
-    <ion-button fill="clear" size="large" (click)="inc()" aria-label="increase">
-      <ion-icon name="add-outline"></ion-icon>
-    </ion-button>
-  </div>
-
-  <!-- Slider -->
-  <div class="mx-3">
-    <ion-range
-      [min]="min"
-      [max]="max"
-      [step]="step"
-      [value]="value"
-      [snaps]="true"
-      (ionChange)="value = +$event.detail.value">
-    </ion-range>
-    <div class="flex justify-between text-xs text-[color:var(--ion-color-medium)] mt-1 mx-[-5px]">
-      <span>{{ formatCurrency(min) }}</span>
-      <span>{{ formatCurrency(max) }}</span>
+    <!-- Slider -->
+    <div class="mx-3">
+        <ion-range
+            [min]="min"
+            [max]="max"
+            [step]="step"
+            [value]="value"
+            [snaps]="true"
+            (ionChange)="value = +$event.detail.value">
+        </ion-range>
+        <div class="flex justify-between text-xs text-[color:var(--ion-color-medium)] mt-1 mx-[-5px]">
+            <span>{{ formatCurrency(min) }}</span>
+            <span>{{ formatCurrency(max) }}</span>
+        </div>
     </div>
-  </div>
 
-  <!-- Optional: direct input -->
-  <ion-item lines="none" class="mt-4">
-    <ion-label position="stacked">Enter amount</ion-label>
-    <ion-input
-      type="number"
-      inputmode="decimal"
-      [value]="value"
-      class="bg-gray-100 dark:bg-gray-800 rounded-md text-right"
-      style="--padding-end: .75rem;">
-      <span slot="end" class="w-5 text-[var(--ion-color-medium)]">$</span>
-    </ion-input>
-  </ion-item>
+    <ion-item lines="none" class="mt-4">
+        <ion-label position="stacked">Enter amount</ion-label>
+        <ion-input
+        type="number"
+        inputmode="decimal"
+        [value]="value"
+        class="bg-gray-100 dark:bg-gray-800 rounded-md text-right"
+        style="--padding-end: .75rem;"
+        (ionInput)="onAmountInput($event)"
+        (ionBlur)="onAmountBlur($event)">
+        <span slot="end" class="w-5 text-[var(--ion-color-medium)]">$</span>
+        </ion-input>
+    </ion-item>
 
-  <div class="p-4">
-    <ion-button expand="block" size="large" (click)="close(true)">OK</ion-button>
-  </div>
+    <div class="p-4">
+        <ion-button expand="block" size="large" (click)="close(true)">OK</ion-button>
+    </div>
 </ion-content>

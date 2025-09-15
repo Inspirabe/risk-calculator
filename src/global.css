@@ -72,3 +72,7 @@ ion-input.ios-field {
   height: 24px;
   margin-right: 8px;
 }
+
+.toast-below-header{
+    top: 50px !important;   /* adjust this to the height of your title/header */
+}

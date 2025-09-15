@@ -1,25 +1,39 @@
 import { Component } from '@angular/core';
-import { ModalController } from '@ionic/angular';
+import { ModalController, ToastController } from '@ionic/angular';
 
-import { SettingsService } from '../services/settings.service';
+import { SettingsService } from '../../services/settings.service';
+import { ApiAuthService } from '../../services/api-auth.service';
+import { LogTradeService, TradePayload } from '../../services/log-trade.service'
+
 import { LeveragePickerPage } from '../leverage-picker/leverage-picker.page';
+import { SymbolPickerPage } from '../symbol-picker/symbol-picker.page';
 
 @Component({
-  selector: 'app-tab1',
-  templateUrl: 'tab1.page.html',
-  styleUrls: ['tab1.page.css'],
-  standalone: false,
+    selector: 'app-tab1',
+    templateUrl: 'tab1.page.html',
+    styleUrls: ['tab1.page.css'],
+    standalone: false,
 })
 
 export class Tab1Page {
     constructor(
         public settings: SettingsService,
-        private modalCtrl: ModalController
+        private auth: ApiAuthService,
+        private modalCtrl: ModalController,
+        private LogTrade: LogTradeService,
+        private toast: ToastController
     ) {}
+
+    submitting:boolean = false;
+    submittingTrade:boolean = false;
+    tradeLogged:boolean = false;
+    showLogTrade:boolean = true;
 
     entry_price_raw: string = '';
     stop_loss_price_raw: string = '';
     take_profit_raw: string = '';
+    
+    selected_symbol: string = '';
 
     entry_price: number                     = 0;
     stop_loss_price: number                 = 0;
@@ -27,20 +41,17 @@ export class Tab1Page {
     leverage: number                        = 20;
     capital: number                         = 1000;
     desired_risk: number                    = 1;
-    reward_risk: number                     = 0;
+    risk_reward: number                     = 0;
 
     distance_to_take_profit: number         = 0;
     distance_to_stop_loss: number           = 0;
     distance_to_take_profit_amount: number  = 0;
     position_size: number                   = 0;
-    maker_fee: number                       = 0.02; // %
-    taker_fee: number                       = 0.05; // %
+    maker_fee: number                       = 0.02;
+    taker_fee: number                       = 0.05;
     risk_capital: number                    = 0;
     recommended_leverage: number            = 10;
     margin_cost: number                     = 0;
-
-    selected_platform: string = 'bingx';
-    platforms = this.settings.platforms;
 
     ngOnInit(): void {
         // ---- leverage ophalen ----
@@ -48,46 +59,15 @@ export class Tab1Page {
         if (tmp_leverage !== null) {
             this.leverage = parseInt(tmp_leverage, 10);
         }
-
-        // ---- platform + fees ophalen ----
-        const stored_platform   = localStorage.getItem('pref_platform');
-        const stored_maker      = localStorage.getItem('pref_maker_fee');
-        const stored_taker      = localStorage.getItem('pref_taker_fee');
-
-        if (stored_platform) {
-            this.selected_platform = stored_platform;
-            // fees uit storage of fallback naar lijst
-            if (stored_maker && stored_taker) {
-                this.maker_fee = parseFloat(stored_maker);
-                this.taker_fee = parseFloat(stored_taker);
-            } else {
-                const p = this.platforms.find(x => x.id === stored_platform);
-                if (p) { this.maker_fee = p.maker_fee; this.taker_fee = p.taker_fee; }
-            }
-        } else {
-            // init defaults wegschrijven
-            localStorage.setItem('pref_platform', String(this.selected_platform));
-            localStorage.setItem('pref_maker_fee', String(this.maker_fee));
-            localStorage.setItem('pref_taker_fee', String(this.taker_fee));
-        }
         this.calc();
     }
 
-
-    on_platform_change(platform_id: string) {
-        this.selected_platform = platform_id;
-        const p = this.platforms.find(x => x.id === platform_id);
-        if (p) {
-            this.maker_fee = p.maker_fee;
-            this.taker_fee = p.taker_fee;
-        }
-        // bewaren in localStorage
-        localStorage.setItem('pref_platform', this.selected_platform);
-        localStorage.setItem('pref_maker_fee', String(this.maker_fee));
-        localStorage.setItem('pref_taker_fee', String(this.taker_fee));
-    }
-
     calc() {
+        if(!this.isPos(this.entry_price) || !this.isPos(this.stop_loss_price) || !this.isPos(this.take_profit)){
+            return;
+        }
+
+
         const tmp_capital = localStorage.getItem('capital');
         if (tmp_capital !== null) {
             this.capital = parseInt(tmp_capital, 10);
@@ -102,28 +82,28 @@ export class Tab1Page {
         const calc_risk_capital             = (this.capital * (this.desired_risk / 100));
 
         this.distance_to_take_profit = Math.abs((this.entry_price - this.take_profit) / this.entry_price);
-        console.log('distance_to_take_profit: ' + this.distance_to_take_profit);
+        // console.log('distance_to_take_profit: ' + this.distance_to_take_profit);
 
         this.distance_to_stop_loss = (Math.abs((this.entry_price - this.stop_loss_price) / this.entry_price));
-        console.log('distance_to_stop_loss: ' + this.distance_to_stop_loss);
+        // console.log('distance_to_stop_loss: ' + this.distance_to_stop_loss);
 
         this.position_size = (this.capital*calc_desired_risk)/((calc_maker_fee+calc_taker_fee)+(1-calc_taker_fee)*this.distance_to_stop_loss);
         this.position_size = Number.isFinite((this.position_size))
             ? this.position_size
             : 0;
-        console.log('position_size: ' + this.position_size);
+        // console.log('position_size: ' + this.position_size);
 
         this.distance_to_take_profit_amount = ((this.position_size+(this.position_size*this.distance_to_take_profit))-this.position_size*calc_maker_fee-((this.position_size+(this.position_size*this.distance_to_take_profit))*calc_taker_fee)-this.position_size);
-        console.log('distance_to_take_profit_amount: ' + this.distance_to_take_profit_amount);
+        // console.log('distance_to_take_profit_amount: ' + this.distance_to_take_profit_amount);
 
-        this.reward_risk = (this.distance_to_take_profit_amount / calc_risk_capital);
-        this.reward_risk = Number.isFinite((this.reward_risk))
-            ? this.reward_risk
+        this.risk_reward = (this.distance_to_take_profit_amount / calc_risk_capital);
+        this.risk_reward = Number.isFinite((this.risk_reward))
+            ? this.risk_reward
             : 0;
-        console.log('reward_risk: ' + this.reward_risk);
+        // console.log('risk_reward: ' + this.risk_reward);
 
         this.recommended_leverage = this.get_recommended_leverage(this.distance_to_stop_loss);
-        console.log('recommended_leverage: ' + this.recommended_leverage);
+        // console.log('recommended_leverage: ' + this.recommended_leverage);
 
         this.margin_cost = this.position_size / this.leverage;
     }
@@ -132,8 +112,6 @@ export class Tab1Page {
         if (distance_to_sl < 0.50) {
             distance_to_sl = distance_to_sl * 100;
         }
-
-        console.log(distance_to_sl);
 
         const leverage_table = [
             { max: 0.52, lev: 75 },
@@ -164,18 +142,20 @@ export class Tab1Page {
         this.stop_loss_price        = 0; 
         this.take_profit            = 0; 
         this.leverage               = 0; 
-        this.reward_risk            = 0;
+        this.risk_reward            = 0;
         this.position_size          = 0;
         this.recommended_leverage   = 10;
         this.margin_cost            = 0;
-        
+
         const tmp_leverage = localStorage.getItem('pref_leverage');
         if (tmp_leverage !== null) {
             this.leverage = parseInt(tmp_leverage, 10);
         }
-        // this.entry_price            = 4.78;
-        // this.stop_loss_price        = 4.75;
-        // this.take_profit            = 4.97;
+
+        this.submitting = false;
+        this.submittingTrade = false;
+        this.tradeLogged = false;
+        this.showLogTrade = true;
     }
 
     onEntryBlur() {
@@ -206,6 +186,105 @@ export class Tab1Page {
         this.calc();
     }
 
+    async logTrade() {
+        if (!this.readyToLog()) {
+            this.presentToast('Fill all fields first', 'warning');
+            return;
+        }
+
+        if (this.submitting) return;
+        this.submitting = true;
+
+        const uuid = (crypto as any).randomUUID ? (crypto as any).randomUUID() :
+                    Math.random().toString(36).slice(2) + Date.now();
+
+        const payload: TradePayload = {
+            idempotency_key: uuid,
+            user_id: 1,
+            platform: this.settings.selected_platform,
+            maker_fee_pct: this.maker_fee,
+            taker_fee_pct: this.taker_fee,
+            symbol: 'QVQX',
+            entry_price: this.entry_price,
+            take_profit: this.take_profit,
+            stop_loss: this.stop_loss_price,
+            leverage: Math.round(this.leverage),
+            position_size: this.position_size,
+            risk_reward: this.risk_reward,
+            margin_cost: this.margin_cost
+        };
+
+        try {
+            // optioneel: token uit settings/localStorage
+            const token = await this.auth.getToken();
+            const res = await this.LogTrade.logTrade(payload, token).toPromise();
+            if (res?.ok) {
+                this.presentToast('Trade logged', 'success');
+
+                if(this.settings.selected_platform != ''){
+                    this.showLogTrade = false;
+                }else{
+                    this.submitting = true;
+                }
+            } else {
+                this.presentToast('Could not log trade', 'danger');
+            }
+        } catch (e: any) {
+            this.presentToast(e?.error?.message || 'Network/API error', 'danger');
+        } finally {
+            this.submitting = false;
+            this.tradeLogged = true;
+        }
+    }
+
+    async placeTrade() {
+        if (this.submittingTrade) return;
+
+        this.submittingTrade = true;
+
+        this.presentToast('Trade placed on ' + this.settings.platform_label, 'success');
+        this.showLogTrade = true;
+        
+        try {
+        //     // optioneel: token uit settings/localStorage
+        //     const token = await this.auth.getToken();
+        //     const res = await this.LogTrade.logTrade(payload, token).toPromise();
+        //     if (res?.ok) {
+                    // this.presentToast('Trade placed on ' + this.settings.platform_label, 'success');
+                    // this.showLogTrade = true;
+                    this.submittingTrade = false;
+        //     } else {
+        //         this.presentToast('Could not place trade', 'danger');
+        //     }
+        // } catch (e: any) {
+        //     this.presentToast(e?.error?.message || 'Network/API error', 'danger');
+        } finally {
+            this.submittingTrade = false;
+            this.reset();
+        }
+    }
+
+    public async presentToast(message: string, color: 'success'|'warning'|'danger'|'medium') {
+        const t = await this.toast.create({ 
+            message: message, 
+            duration: 3000, 
+            color: color, 
+            position: 'top',
+            cssClass: 'toast-below-header',
+            buttons: [
+                {
+                    side: 'start',
+                    icon: color === 'success' ? 'checkmark-circle' : 'alert-circle',
+                }
+            ]
+        });
+        await t.present();
+    }
+
+    readyToLog(): boolean {
+        return this.isPos(this.entry_price) && this.isPos(this.stop_loss_price) && this.isPos(this.take_profit);
+    }
+
     async openLeverage() {
         const modal = await this.modalCtrl.create({
             component: LeveragePickerPage,
@@ -215,7 +294,26 @@ export class Tab1Page {
         });
 
         modal.onDidDismiss().then(({ data }) => {
-        if (typeof data === 'number') this.leverage = data;
+            if (typeof data === 'number') this.leverage = data;
+            this.calc();
+        });
+
+        await modal.present();
+    }
+
+    async openSymbolPicker() {
+        console.log('openSymbolPicker called')
+        
+        const modal = await this.modalCtrl.create({
+            component: SymbolPickerPage,
+            breakpoints: [0, 0.9],
+            initialBreakpoint: 0.9
+        });
+
+        modal.onDidDismiss().then(({ data }) => {
+            if (data) {
+                this.selected_symbol = data; // symbool uit modal
+            }
         });
 
         await modal.present();

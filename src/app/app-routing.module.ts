@@ -16,6 +16,10 @@ const routes: Routes = [
   },  {
     path: 'capital-picker',
     loadChildren: () => import('./capital-picker/capital-picker.module').then( m => m.CapitalPickerPageModule)
+  },
+  {
+    path: 'symbol-picker',
+    loadChildren: () => import('./symbol-picker/symbol-picker.module').then( m => m.SymbolPickerPageModule)
   }
 
 ];

@@ -3,7 +3,10 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+    production: false,
+    apiBaseUrl: 'https://api.riskcalculator.tegridy.capital/v1',
+    clientID: '66e92d7be91494',
+    clientSecret: '297a09cf2578738bdc809a9946dfa0e9' 
 };
 
 /*

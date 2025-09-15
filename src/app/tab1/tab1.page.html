@@ -83,27 +83,27 @@
     <ion-card 
         class="p-3 my-2 rounded-2xl"
         [ngClass]="{
-            'bg-white dark:bg-gray-800': reward_risk === 0,
-            'bg-green-100': reward_risk > 2,
-            'bg-yellow-100': reward_risk > 1 && reward_risk <= 2,
-            'bg-red-100': reward_risk > 0 && reward_risk <= 1
+            'bg-white dark:bg-gray-800': risk_reward === 0,
+            'bg-green-100': risk_reward > 2,
+            'bg-yellow-100': risk_reward > 1 && risk_reward <= 2,
+            'bg-red-100': risk_reward > 0 && risk_reward <= 1
         }">
         <div class="grid grid-cols-1 text-center">
-            <p class="text-muted">Reward : Risk</p>
+            <p class="text-muted">Risk / Reward</p>
             <p 
             class="text-3xl font-bold text-center"
             [ngClass]="{
-                'text-green-600': reward_risk > 2,
-                'text-yellow-600': reward_risk > 1 && reward_risk <= 2,
-                'text-red-600': reward_risk > 0 && reward_risk <= 1
-            }">{{ reward_risk | number:'1.2-2' }}</p>
+                'text-green-600': risk_reward > 2,
+                'text-yellow-600': risk_reward > 1 && risk_reward <= 2,
+                'text-red-600': risk_reward > 0 && risk_reward <= 1
+            }">{{ risk_reward | number:'1.2-2' }}</p>
             <p class="text-muted">Position size</p>
             <p 
             class="text-3xl font-bold text-center"
             [ngClass]="{
-                'text-green-600': reward_risk > 2,
-                'text-yellow-600': reward_risk > 1 && reward_risk <= 2,
-                'text-red-600': reward_risk > 0 && reward_risk <= 1
+                'text-green-600': risk_reward > 2,
+                'text-yellow-600': risk_reward > 1 && risk_reward <= 2,
+                'text-red-600': risk_reward > 0 && risk_reward <= 1
             }">{{ position_size | number:'1.2-2' }} $</p>
         </div>
 
@@ -117,7 +117,7 @@
 
     <ion-list inset="true">
         <!-- <ion-item lines="full">
-            <ion-label class="font-semibold">Logging</ion-label>
+            <ion-label class="font-semibold">Titel</ion-label>
         </ion-item> -->
 
         <!-- Compact item met klikbare waarde rechts -->
@@ -132,27 +132,39 @@
             </button>
         </ion-item>
 
-        <!-- Platform -->
-        <ion-item lines="none" class="py-0">
-            <ion-label class="font-[0.875rem] font-medium">Platform</ion-label>
-            <ion-select
+        
+        <ion-item lines="full">
+            <ion-label class="font-[0.875rem] font-medium">symbol</ion-label>
+            <button
+                type="button"
                 slot="end"
-                interface="popover"
-                [value]="selected_platform"
-                (ionChange)="on_platform_change($event.detail.value)"
-                class="px-3 py-0 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm font-semibold min-w-[8rem]"
-                >
-                <ion-select-option
-                    *ngFor="let p of settings.platforms"
-                    [value]="p.id">
-                    {{ p.label }}
-                </ion-select-option>
-            </ion-select>
+                (click)="openSymbolPicker()"
+                class="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm font-semibold">
+                {{ selected_symbol || 'Select' }}
+            </button>
         </ion-item>
-
-        <div class="flex items-center gap-3 mt-0 mb-3 px-2">
-            <ion-button expand="block" class="flex-1" (click)="reset()">+ Place Trade</ion-button>
-        </div>
     </ion-list>
 
+    <div class="flex items-center gap-3 mt-0 mb-3 px-5">
+        <ion-button expand="block"
+                class="flex-1"
+                *ngIf="showLogTrade"
+                [disabled]="!readyToLog() || submitting || tradeLogged"
+                (click)="logTrade()">
+            <ion-spinner *ngIf="submitting" name="lines-small"></ion-spinner>
+            <ng-container *ngIf="!submitting">
+                {{ tradeLogged ? 'Trade Logged' : 'Log Trade' }}
+            </ng-container>
+        </ion-button>
+
+        <ion-button expand="block" 
+            class="flex-1" 
+            color="secondary"
+            *ngIf="!showLogTrade && settings.selected_platform != ''"
+            (click)="placeTrade()">
+            <ion-spinner *ngIf="submittingTrade" name="lines-small"></ion-spinner>
+            <ng-container >Submit Trade on {{this.settings.platform_label}}</ng-container>
+        </ion-button>
+    </div>
+    
 </ion-content>

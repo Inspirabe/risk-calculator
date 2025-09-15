@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
+import { SettingsService } from '../services/settings.service';
+
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
@@ -8,25 +10,29 @@ import { Component, OnInit } from '@angular/core';
 })
 
 export class AppComponent implements OnInit {
-  ngOnInit(): void {
-    const stored = localStorage.getItem('pref_dark_mode');
-    let dark = stored !== null
-      ? stored === 'true'
-      : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    constructor(
+        public settings: SettingsService
+    ) {}
 
-    this.apply_theme(dark);
+    ngOnInit(): void {
+        const stored = localStorage.getItem('pref_dark_mode');
+        let dark = stored !== null
+            ? stored === 'true'
+            : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
-    // Optioneel: volg systeem als user geen keuze heeft
-    if (stored === null && window.matchMedia) {
-      const mq = window.matchMedia('(prefers-color-scheme: dark)');
-      mq.addEventListener?.('change', (e) => {
-        this.apply_theme(e.matches);
-      });
+        this.apply_theme(dark);
+
+        // Optioneel: volg systeem als user geen keuze heeft
+        if (stored === null && window.matchMedia) {
+            const mq = window.matchMedia('(prefers-color-scheme: dark)');
+            mq.addEventListener?.('change', (e) => {
+            this.apply_theme(e.matches);
+            });
+        }
     }
-  }
 
-  private apply_theme(dark: boolean): void {
-    document.body.classList.toggle('dark', dark);             // Ionic vars
-    document.documentElement.classList.toggle('dark', dark);  // Tailwind
-  }
+    private apply_theme(dark: boolean): void {
+        document.body.classList.toggle('dark', dark);             // Ionic vars
+        document.documentElement.classList.toggle('dark', dark);  // Tailwind
+    }
 }
