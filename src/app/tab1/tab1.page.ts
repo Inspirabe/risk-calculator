@@ -215,7 +215,6 @@ export class Tab1Page {
         };
 
         try {
-            // optioneel: token uit settings/localStorage
             const token = await this.auth.getToken();
             const res = await this.LogTrade.logTrade(payload, token).toPromise();
             if (res?.ok) {
