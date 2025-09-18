@@ -123,7 +123,6 @@
         <!-- Compact item met klikbare waarde rechts -->
         <ion-item lines="none" class="py-0">
             <ion-label class="font-[0.875rem] font-medium">Leverage</ion-label>
-
             <button type="button"
                     slot="end"
                     (click)="openLeverage()"
@@ -134,13 +133,13 @@
 
         
         <ion-item lines="full">
-            <ion-label class="font-[0.875rem] font-medium">symbol</ion-label>
+            <ion-label class="font-[0.875rem] font-medium">Futures</ion-label>
             <button
                 type="button"
                 slot="end"
                 (click)="openSymbolPicker()"
                 class="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm font-semibold">
-                {{ selected_symbol || 'Select' }}
+                {{ settings.selected_symbol?.display || 'Select' }}
             </button>
         </ion-item>
     </ion-list>
@@ -148,9 +147,9 @@
     <div class="flex items-center gap-3 mt-0 mb-3 px-5">
         <ion-button expand="block"
                 class="flex-1"
-                *ngIf="showLogTrade"
+                *ngIf="showUserTrade"
                 [disabled]="!readyToLog() || submitting || tradeLogged"
-                (click)="logTrade()">
+                (click)="userTrade()">
             <ion-spinner *ngIf="submitting" name="lines-small"></ion-spinner>
             <ng-container *ngIf="!submitting">
                 {{ tradeLogged ? 'Trade Logged' : 'Log Trade' }}
@@ -160,7 +159,7 @@
         <ion-button expand="block" 
             class="flex-1" 
             color="secondary"
-            *ngIf="!showLogTrade && settings.selected_platform != ''"
+            *ngIf="!showUserTrade && settings.selected_platform != ''"
             (click)="placeTrade()">
             <ion-spinner *ngIf="submittingTrade" name="lines-small"></ion-spinner>
             <ng-container >Submit Trade on {{this.settings.platform_label}}</ng-container>

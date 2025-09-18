@@ -18,7 +18,7 @@
             <ion-toggle
             slot="end"
             [(ngModel)]="is_dark_mode"
-            (ionChange)="set_dark_mode(is_dark_mode)">
+            (ionChange)="setDarkMode(is_dark_mode)">
             </ion-toggle>
         </ion-item>
 
@@ -61,13 +61,22 @@
             </button>
         </ion-item>
 
+        <ion-item lines="full">
+            <ion-label>Auto Apply Recommended Leverage</ion-label>
+            <ion-toggle
+            slot="end"
+            [(ngModel)]="settings.apply_recom_leverage"
+            (ionChange)="settings.setApplyRecomLeverage(settings.apply_recom_leverage)">
+            </ion-toggle>
+        </ion-item>
+
         <ion-item lines="none" class="py-3">
             <ion-label class="font-[0.875rem] font-medium">Platform</ion-label>
             <ion-select
                 slot="end"
                 interface="popover"
                 [value]="this.settings.selected_platform"
-                (ionChange)="on_platform_change($event.detail.value)"
+                (ionChange)="onPlatformChange($event.detail.value)"
                 class="px-3 py-0 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm font-semibold min-w-[8rem]"
                 >
                 <ion-select-option value="">— None —</ion-select-option>
@@ -83,11 +92,11 @@
 
     <ion-card>
         <ion-item lines="none" class="my-4">
-            <ion-label position="stacked">Client ID</ion-label>
+            <ion-label position="stacked">Client UID</ion-label>
             <ion-input
                 type="text"
                 inputmode="text"
-                [value]="this.settings.user_client_id"
+                [value]="this.settings.user_client_uid"
                 class="bg-gray-100 dark:bg-gray-800 rounded-md text-right"
                 style="--padding-end: .75rem;"
                 (ionInput)="onClientInput($event)"

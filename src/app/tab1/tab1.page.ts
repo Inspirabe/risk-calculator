@@ -3,7 +3,8 @@ import { ModalController, ToastController } from '@ionic/angular';
 
 import { SettingsService } from '../../services/settings.service';
 import { ApiAuthService } from '../../services/api-auth.service';
-import { LogTradeService, TradePayload } from '../../services/log-trade.service'
+import { UserTradeService, UserTradePayload } from '../../services/user-trade.service'
+import { TradeService, TradePayload } from '../../services/trade.service'
 
 import { LeveragePickerPage } from '../leverage-picker/leverage-picker.page';
 import { SymbolPickerPage } from '../symbol-picker/symbol-picker.page';
@@ -20,14 +21,15 @@ export class Tab1Page {
         public settings: SettingsService,
         private auth: ApiAuthService,
         private modalCtrl: ModalController,
-        private LogTrade: LogTradeService,
+        private UserTrade: UserTradeService,
+        private Trade: TradeService,
         private toast: ToastController
     ) {}
 
     submitting:boolean = false;
     submittingTrade:boolean = false;
     tradeLogged:boolean = false;
-    showLogTrade:boolean = true;
+    showUserTrade:boolean = true;
 
     entry_price_raw: string = '';
     stop_loss_price_raw: string = '';
@@ -59,14 +61,13 @@ export class Tab1Page {
         if (tmp_leverage !== null) {
             this.leverage = parseInt(tmp_leverage, 10);
         }
-        this.calc();
+        // this.calc();
     }
 
     calc() {
         if(!this.isPos(this.entry_price) || !this.isPos(this.stop_loss_price) || !this.isPos(this.take_profit)){
             return;
         }
-
 
         const tmp_capital = localStorage.getItem('capital');
         if (tmp_capital !== null) {
@@ -104,6 +105,10 @@ export class Tab1Page {
 
         this.recommended_leverage = this.get_recommended_leverage(this.distance_to_stop_loss);
         // console.log('recommended_leverage: ' + this.recommended_leverage);
+
+        if(this.settings.apply_recom_leverage){
+            this.leverage = this.recommended_leverage;
+        }
 
         this.margin_cost = this.position_size / this.leverage;
     }
@@ -155,7 +160,7 @@ export class Tab1Page {
         this.submitting = false;
         this.submittingTrade = false;
         this.tradeLogged = false;
-        this.showLogTrade = true;
+        this.showUserTrade = true;
     }
 
     onEntryBlur() {
@@ -186,7 +191,7 @@ export class Tab1Page {
         this.calc();
     }
 
-    async logTrade() {
+    async userTrade() {
         if (!this.readyToLog()) {
             this.presentToast('Fill all fields first', 'warning');
             return;
@@ -198,13 +203,13 @@ export class Tab1Page {
         const uuid = (crypto as any).randomUUID ? (crypto as any).randomUUID() :
                     Math.random().toString(36).slice(2) + Date.now();
 
-        const payload: TradePayload = {
+        const payload: UserTradePayload = {
             idempotency_key: uuid,
-            user_id: 1,
+            user_client_uid: this.settings.user_client_uid,
             platform: this.settings.selected_platform,
             maker_fee_pct: this.maker_fee,
             taker_fee_pct: this.taker_fee,
-            symbol: 'QVQX',
+            symbol: this.settings.getTradeSymbol(),
             entry_price: this.entry_price,
             take_profit: this.take_profit,
             stop_loss: this.stop_loss_price,
@@ -216,12 +221,12 @@ export class Tab1Page {
 
         try {
             const token = await this.auth.getToken();
-            const res = await this.LogTrade.logTrade(payload, token).toPromise();
+            const res = await this.UserTrade.userTrade(payload, token).toPromise();
             if (res?.ok) {
                 this.presentToast('Trade logged', 'success');
 
                 if(this.settings.selected_platform != ''){
-                    this.showLogTrade = false;
+                    this.showUserTrade = false;
                 }else{
                     this.submitting = true;
                 }
@@ -241,26 +246,64 @@ export class Tab1Page {
 
         this.submittingTrade = true;
 
-        this.presentToast('Trade placed on ' + this.settings.platform_label, 'success');
-        this.showLogTrade = true;
-        
         try {
-        //     // optioneel: token uit settings/localStorage
-        //     const token = await this.auth.getToken();
-        //     const res = await this.LogTrade.logTrade(payload, token).toPromise();
-        //     if (res?.ok) {
-                    // this.presentToast('Trade placed on ' + this.settings.platform_label, 'success');
-                    // this.showLogTrade = true;
-                    this.submittingTrade = false;
-        //     } else {
-        //         this.presentToast('Could not place trade', 'danger');
-        //     }
-        // } catch (e: any) {
-        //     this.presentToast(e?.error?.message || 'Network/API error', 'danger');
+            const uuid = (crypto as any).randomUUID
+                ? (crypto as any).randomUUID()
+                : Math.random().toString(36).slice(2) + Date.now();
+
+
+            const payload: TradePayload = {
+                idempotency_key: uuid,
+                user_client_uid: this.settings.user_client_uid,
+                platform: this.settings.selected_platform,
+                symbol: this.settings.getTradeSymbol(),
+                type: 'limit',
+                leverage: Math.round(this.leverage),
+                side: this.getTradeSide(),
+                amount: this.margin_cost, // eigen inzet in $
+                price: this.entry_price,
+                take_profit: this.take_profit,
+                stop_loss: this.stop_loss_price,
+            };
+
+            const token = await this.auth.getToken();
+            const res: any = await this.Trade.placeTrade(payload, token).toPromise();
+
+            if (res?.ok) {
+                this.presentToast(`Trade placed on ${this.settings.platform_label}`, 'success');
+                this.showUserTrade = true;
+                this.reset();
+                // this.submittingTrade = false;
+            } else {
+                this.presentToast(res?.error || 'Could not place trade', 'danger');
+                // this.submittingTrade = false;
+            }
+        } catch (err: any) {
+            let msg = 'Network/API error';
+            if (err?.error?.error) {
+                msg = extractExchangeMsg(err.error.error);
+            } else if (err?.error?.message) {
+                msg = err.error.message;
+            } else if (err?.message) {
+                msg = err.message;
+            }
+            this.presentToast(msg, 'danger');
+            // this.submittingTrade = false;
         } finally {
             this.submittingTrade = false;
-            this.reset();
         }
+    }
+
+    private getTradeSide(): 'long' | 'short' {
+        const e  = Number(this.entry_price);
+        const tp = Number(this.take_profit);
+
+        if (!(e > 0 && tp > 0)) return 'long';
+
+        if (Math.abs(tp - e) < 1e-8) {
+            return 'long';
+        }
+        return tp > e ? 'long' : 'short';
     }
 
     public async presentToast(message: string, color: 'success'|'warning'|'danger'|'medium') {
@@ -301,8 +344,6 @@ export class Tab1Page {
     }
 
     async openSymbolPicker() {
-        console.log('openSymbolPicker called')
-        
         const modal = await this.modalCtrl.create({
             component: SymbolPickerPage,
             breakpoints: [0, 0.9],
@@ -338,4 +379,22 @@ export class Tab1Page {
 
     private isPos(n: number) { return Number.isFinite(n) && n > 0; }
 
+}
+
+// helper: haal "msg" uit een string zoals: 'bingx {"code":..., "msg":"..."}'
+function extractExchangeMsg(raw: unknown): string {
+    const s = typeof raw === 'string' ? raw : String(raw ?? '');
+    // probeer JSON-substring vanaf eerste '{'
+    const i = s.indexOf('{');
+    if (i !== -1) {
+        try {
+            const obj = JSON.parse(s.slice(i));
+            if (obj?.msg) return obj.msg as string;
+        } catch { /* ignore */ }
+    }
+    // fallback: regex
+    const m = s.match(/"msg"\s*:\s*"([^"]+)"/);
+    if (m) return m[1];
+    // laatste fallback: hele string
+    return s;
 }

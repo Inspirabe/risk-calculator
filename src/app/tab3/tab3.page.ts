@@ -21,12 +21,12 @@ export class Tab3Page implements OnInit, ViewWillEnter {
         private modalCtrl: ModalController
     ) {}
 
-    is_dark_mode: boolean       = false;
-    leverage: number            = 20; 
-    desired_risk: number        = 1;
-    risk_capital: number        = (this.settings.capital * (this.desired_risk / 100))
-    // selected_platform: string   = 'bingx';
-    platforms                   = this.settings.platforms;
+    is_dark_mode: boolean               = false;
+    apply_recom_leverage: boolean       = false;
+    leverage: number                    = 20; 
+    desired_risk: number                = 1;
+    risk_capital: number                = (this.settings.capital * (this.desired_risk / 100))
+    platforms                           = this.settings.platforms;
 
     async ngOnInit(): Promise<void> {
         await this.settings.loadPlatforms();
@@ -47,34 +47,6 @@ export class Tab3Page implements OnInit, ViewWillEnter {
             });
         }
 
-        console.log(this.settings.selected_platform);
-
-        // const stored_platform   = this.settings.selected_platform;
-        // const stored_maker_fee  = this.settings.maker_fee;
-        // const stored_taker_fee  = this.settings.taker_fee;
-
-        // if (stored_platform) {
-        //     // this.selected_platform = stored_platform;
-        //     // fees uit storage of fallback naar lijst
-        //     // if (stored_maker_fee && stored_taker_fee) {
-        //     // } else {
-        //     //     const p = this.platforms.find(x => x.id === stored_platform);
-        //     //     if (p) { 
-        //     //         localStorage.setItem('pref_maker_fee', String(p.maker_fee));
-        //     //         localStorage.setItem('pref_taker_fee', String(p.taker_fee));
-        //     //     }
-        //     // }
-        // } else {
-        //     // init defaults wegschrijven
-        //     // localStorage.setItem('pref_platform', String(this.selected_platform));
-        //     // const p = this.platforms.find(x => x.id === this.selected_platform);
-        //     // if (p) { 
-        //     //     localStorage.setItem('pref_maker_fee', String(p.maker_fee));
-        //     //     localStorage.setItem('pref_taker_fee', String(p.taker_fee));
-        //     // }
-        // }
-
-        
         const tmp_leverage = localStorage.getItem('pref_leverage');
         if (tmp_leverage !== null) {
             this.leverage = parseInt(tmp_leverage, 10);
@@ -85,7 +57,11 @@ export class Tab3Page implements OnInit, ViewWillEnter {
             this.desired_risk = parseInt(tmp_desired_risk, 10);
         }
         
-        this.recalculate_risk_capital();
+        const storedRecomLeverage = localStorage.getItem('apply_recom_leverage');
+        if (storedRecomLeverage !== null) {
+            this.apply_recom_leverage = storedRecomLeverage === 'true';
+        }
+        this.settings.setApplyRecomLeverage(this.apply_recom_leverage);
     }
 
     ionViewWillEnter(): void {
@@ -101,18 +77,9 @@ export class Tab3Page implements OnInit, ViewWillEnter {
 
         const tmp_desired_risk = localStorage.getItem('desired_risk');
         if (tmp_desired_risk !== null) this.desired_risk = parseInt(tmp_desired_risk, 10);
-        this.recalculate_risk_capital();
-        // this.risk_capital = (this.capital * (this.desired_risk / 100))
-        // const tmp_risk_capital = localStorage.getItem('risk_capital');
-        // if (tmp_risk_capital !== null) this.risk_capital = parseInt(tmp_risk_capital, 10);
-
     }
 
-    recalculate_risk_capital(): void{
-        // this.risk_capital = (this.capital * (this.desired_risk / 100));
-    }
-
-    set_dark_mode(dark: boolean): void {
+    setDarkMode(dark: boolean): void {
         localStorage.setItem('pref_dark_mode', String(dark));
         this.apply_theme(dark);
     }
@@ -129,7 +96,6 @@ export class Tab3Page implements OnInit, ViewWillEnter {
             if (typeof data === 'number') {
                 this.desired_risk = data;
                 localStorage.setItem('desired_risk', String(data));
-                this.recalculate_risk_capital();
             }
         });
 
@@ -153,7 +119,6 @@ export class Tab3Page implements OnInit, ViewWillEnter {
 
         await modal.present();
     }
-
     
     async openLeverage() {
         const modal = await this.modalCtrl.create({
@@ -173,18 +138,17 @@ export class Tab3Page implements OnInit, ViewWillEnter {
         await modal.present();
     }
 
-
-    on_platform_change(platform_id: string) {
+    onPlatformChange(platform_id: string) {
         this.settings.switchPlatform(platform_id);
     }
-    
+
+    setApplyRecommendedLeverage(applyRecommandedLeverage: boolean) {
+        this.settings.setApplyRecomLeverage(applyRecommandedLeverage);
+    }
      
     onClientInput(ev: CustomEvent) {
         const raw = String(ev.detail?.value ?? '');
-        console.log(raw);
-        this.settings.setClientID(raw);
-        this.settings.user_client_id = raw;
-        console.log(raw);
+        this.settings.setUserClientUID(raw);
     }
 
     async selectAll(ev: CustomEvent) {

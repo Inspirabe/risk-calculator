@@ -11,22 +11,37 @@ export type PlatformRow = {
     taker_fee: number; // percent, e.g. 0.05 means 0.05%
 };
 
+export type Symbol = { 
+    display: string; 
+    trade: string 
+};
+
 @Injectable({ 
     providedIn: 'root' 
 })
 
-export class SettingsService {
+export class SettingsService{
+    selected_symbol: Symbol | null = null;
+
     constructor(
         private http: HttpClient, 
         private auth: ApiAuthService
-    ) {}
+    ) {
+        const storedDisplay = localStorage.getItem('selected_symbol_display');
+        const storedTrade   = localStorage.getItem('selected_symbol_trade');
 
-    capital: number     = 1000;
-    user_client_id      = localStorage.getItem('user_client_id') ?? '';
-    selected_platform   = localStorage.getItem('pref_platform') ?? '';
-    platform_label      = localStorage.getItem('platform_label') ?? '';
-    maker_fee: number   = parseFloat(localStorage.getItem('pref_maker_fee') ?? '0.02');
-    taker_fee: number   = parseFloat(localStorage.getItem('pref_taker_fee') ?? '0.05');
+        if (storedDisplay && storedTrade) {
+            this.selected_symbol = { display: storedDisplay, trade: storedTrade };
+        }
+    }
+
+    capital: number                 = 1000;
+    user_client_uid:string          = localStorage.getItem('user_client_uid') ?? '';
+    selected_platform               = localStorage.getItem('pref_platform') ?? '';
+    platform_label                  = localStorage.getItem('platform_label') ?? '';
+    maker_fee: number               = parseFloat(localStorage.getItem('pref_maker_fee') ?? '0.02');
+    taker_fee: number               = parseFloat(localStorage.getItem('pref_taker_fee') ?? '0.05');
+    apply_recom_leverage: boolean   = (localStorage.getItem('apply_recom_leverage') ?? 'true') === 'true';
 
     platforms = [
         { id: 'bingx',   label: 'BingX',    maker_fee: 0.02, taker_fee: 0.05 }
@@ -82,7 +97,7 @@ export class SettingsService {
         const url = `${environment.apiBaseUrl}/markets/`;
 
         const params = {
-            user_id: this.user_client_id,
+            user_id: this.user_client_uid,
             platform: this.selected_platform,
             quote: 'USDT'
         };
@@ -101,12 +116,35 @@ export class SettingsService {
         }
     }
 
+    setApplyRecomLeverage(apply_recom_leverage: boolean){
+        this.apply_recom_leverage = apply_recom_leverage;
+        const storedRecomLeverage = apply_recom_leverage;
 
+        if (storedRecomLeverage !== null) {
+            localStorage.setItem('apply_recom_leverage', String(storedRecomLeverage));
+        }
+    }
 
+    setUserClientUID(user_client_uid: string){
+        this.user_client_uid = user_client_uid;
+        localStorage.setItem('user_client_uid', String(user_client_uid));
+    }
 
+    setSymbol(symbol: Symbol) {
+        this.selected_symbol = symbol;
+        localStorage.setItem('selected_symbol_display', symbol.display);
+        localStorage.setItem('selected_symbol_trade', symbol.trade);
+    }
 
-    setClientID(user_client_id: string){
-        localStorage.setItem('user_client_id', String(user_client_id));
+    getTradeSymbol() {
+        const trade_symbol = localStorage.getItem('selected_symbol_trade') ?? '';
+        return trade_symbol;
+    }
+    
+    clearSymbol() {
+        this.selected_symbol = null;
+        localStorage.removeItem('selected_symbol_display');
+        localStorage.removeItem('selected_symbol_trade');
     }
 
     /** ========================================================================== */

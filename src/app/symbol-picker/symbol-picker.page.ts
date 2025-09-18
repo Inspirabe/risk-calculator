@@ -10,8 +10,8 @@ import { SettingsService } from '../../services/settings.service';
 })
 
 export class SymbolPickerPage implements OnInit {
-    symbols: string[] = [];
-    filtered: string[] = [];
+    symbols: { display: string; trade: string }[] = [];
+    filtered: { display: string; trade: string }[] = [];
     searchTerm: string = '';
 
     loading = true;
@@ -24,12 +24,11 @@ export class SymbolPickerPage implements OnInit {
     async ngOnInit() {
         try {
             const markets = await this.settings.loadMarkets('USDT');
-            console.log('Markets response:', markets);
-
-            // neem symbol en verwijder ":USDT"
-            this.symbols = markets
-                .map(m => m.symbol?.replace(/:.*/, '') ?? '')
-                .filter(s => s.length > 0);
+            // bewaar beide vormen
+            this.symbols = markets.map(m => ({
+                display: m.symbol?.replace(/:.*/, '') ?? '',
+                trade: m.symbol ?? '',
+            }));
 
             this.filtered = [...this.symbols];
         } catch (err) {
@@ -41,11 +40,14 @@ export class SymbolPickerPage implements OnInit {
 
     onSearch(ev: any) {
         const term = (ev.detail.value || '').toLowerCase();
-        this.filtered = this.symbols.filter(s => s.toLowerCase().includes(term));
+        this.filtered = this.symbols.filter(s => 
+            s.display.toLowerCase().includes(term)
+        );
     }
 
-    selectSymbol(symbol: string) {
-        this.modalCtrl.dismiss(symbol);
+    selectSymbol(symbol: { display: string; trade: string }) {
+        this.settings.setSymbol(symbol);
+        this.modalCtrl.dismiss(symbol.display);
     }
 
     close() {

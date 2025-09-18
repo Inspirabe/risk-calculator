@@ -4,33 +4,35 @@ import { environment } from '../environments/environment';
 
 export interface TradePayload {
     idempotency_key: string;
-    user_id: number;
+    user_client_uid: string;
     platform: string;
-    maker_fee_pct: number;
-    taker_fee_pct: number;
     symbol: string;
-    entry_price: number;
-    take_profit: number;
-    stop_loss: number;
+    type: 'market' | 'limit';
+    side: 'buy' | 'sell' | 'long' | 'short';
     leverage: number;
-    position_size: number;
-    risk_reward: number;
-    margin_cost: number;
+    amount: number;
+    price?: number;
+    take_profit?: number;
+    stop_loss?: number;
 }
 
+
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
-export class LogTradeService {
+export class TradeService {
 
     constructor(private http: HttpClient) {}
 
-    logTrade(payload: TradePayload, token?: string) {
+    placeTrade(payload: TradePayload, token?: string) {
         let headers = new HttpHeaders({'Content-Type': 'application/json'});
         if (token) headers = headers.set('Authorization', `Bearer ${token}`);
         headers = headers.set('Idempotency-Key', payload.idempotency_key);
 
-        const url = `${environment.apiBaseUrl}/user-trade/`;
+        const url = `${environment.apiBaseUrl}/trade/`;
+        
+        console.log(url);
+
         return this.http.post<{id: string; ok: boolean}>(url, payload, { headers });
     }
 }
