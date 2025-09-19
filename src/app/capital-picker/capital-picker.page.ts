@@ -18,7 +18,9 @@ export class CapitalPickerPage {
     @Input() step = 1000;       // +/- step
     @Input() title = 'Edit Capital';
 
-    constructor(private modalCtrl: ModalController) {}
+    constructor(
+        private modalCtrl: ModalController
+    ) {}
 
     dec()  { this.value = Math.max(this.min, this.value - this.step); }
     inc()  { this.value = Math.min(this.max, this.value + this.step); }

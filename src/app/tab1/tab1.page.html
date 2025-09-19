@@ -109,9 +109,9 @@
 
         <div class="grid grid-cols-2 text-center">
             <p class="text-muted" (click)="applyRecommendedLeverage()">Recom. Leverage</p>
-            <p class="text-muted">Margin cost</p>
-            <p class="font-bold" (click)="applyRecommendedLeverage()">{{ recommended_leverage | number:'1.0-0' }}</p>
-            <p class="font-bold">{{ margin_cost | number:'1.2-2' }} $</p>
+            <p class="text-muted" (click)="applyPositionSize()">Margin cost</p>
+            <p class="font-bold" (click)="applyPositionSize()">{{ recommended_leverage | number:'1.0-0' }}</p>
+            <p class="font-bold" (click)="applyPositionSize()">{{ margin_cost | number:'1.2-2' }} $</p>
         </div>
     </ion-card>
 
@@ -119,6 +119,17 @@
         <!-- <ion-item lines="full">
             <ion-label class="font-semibold">Titel</ion-label>
         </ion-item> -->
+
+        <!-- Compact item met klikbare waarde rechts -->
+        <ion-item lines="none" class="py-0">
+            <ion-label class="font-[0.875rem] font-medium">Trade Margin Cost</ion-label>
+            <button type="button"
+                    slot="end"
+                    (click)="openTradeMarginCost()"
+                    class="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm font-semibold">
+                <span class="opacity-70">$ </span> {{ trade_margin_cost }}
+            </button>
+        </ion-item>
 
         <!-- Compact item met klikbare waarde rechts -->
         <ion-item lines="none" class="py-0">

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ModalController } from '@ionic/angular';
+import { ModalController, LoadingController  } from '@ionic/angular';
 import { SettingsService } from '../../services/settings.service';
 
 @Component({
@@ -18,10 +18,17 @@ export class SymbolPickerPage implements OnInit {
 
     constructor(
         private modalCtrl: ModalController,
+        private loadingCtrl: LoadingController,
         private settings: SettingsService
     ) {}
 
     async ngOnInit() {
+        const loading = await this.loadingCtrl.create({
+            message: 'Loading...',
+            spinner: 'crescent' // or 'bubbles', 'dots', etc.
+        });
+        await loading.present();
+        
         try {
             const markets = await this.settings.loadMarkets('USDT');
             // bewaar beide vormen
@@ -35,6 +42,7 @@ export class SymbolPickerPage implements OnInit {
             console.error('Error loading markets', err);
         } finally {
             this.loading = false;
+            loading.dismiss();
         }
     }
 

@@ -6,6 +6,7 @@ import { ApiAuthService } from '../../services/api-auth.service';
 import { UserTradeService, UserTradePayload } from '../../services/user-trade.service'
 import { TradeService, TradePayload } from '../../services/trade.service'
 
+import { TradeMarginCostPickerPage } from '../trade-margincost-picker/trade-margincost-picker.page';
 import { LeveragePickerPage } from '../leverage-picker/leverage-picker.page';
 import { SymbolPickerPage } from '../symbol-picker/symbol-picker.page';
 
@@ -40,6 +41,7 @@ export class Tab1Page {
     entry_price: number                     = 0;
     stop_loss_price: number                 = 0;
     take_profit: number                     = 0;
+    trade_margin_cost: number               = 0;
     leverage: number                        = 20;
     capital: number                         = 1000;
     desired_risk: number                    = 1;
@@ -106,11 +108,15 @@ export class Tab1Page {
         this.recommended_leverage = this.get_recommended_leverage(this.distance_to_stop_loss);
         // console.log('recommended_leverage: ' + this.recommended_leverage);
 
+        this.margin_cost = this.position_size / this.leverage;
+
+        this.margin_cost = Math.round(this.margin_cost * 100) / 100;
+
+        
         if(this.settings.apply_recom_leverage){
             this.leverage = this.recommended_leverage;
+            this.trade_margin_cost = this.margin_cost;
         }
-
-        this.margin_cost = this.position_size / this.leverage;
     }
 
     get_recommended_leverage(distance_to_sl: number): number {
@@ -189,6 +195,13 @@ export class Tab1Page {
         localStorage.setItem('pref_leverage', String(lev));
 
         this.calc();
+    }
+
+    applyPositionSize(): void {
+        const cost = this.margin_cost || 0;
+        if (!Number.isFinite(cost) || cost <= 0) return;
+
+        this.trade_margin_cost = Math.round(cost * 100) / 100; // 2 cijfers na de komma
     }
 
     async userTrade() {
@@ -309,7 +322,7 @@ export class Tab1Page {
     public async presentToast(message: string, color: 'success'|'warning'|'danger'|'medium') {
         const t = await this.toast.create({ 
             message: message, 
-            duration: 3000, 
+            duration: 1500, 
             color: color, 
             position: 'top',
             cssClass: 'toast-below-header',
@@ -337,6 +350,22 @@ export class Tab1Page {
 
         modal.onDidDismiss().then(({ data }) => {
             if (typeof data === 'number') this.leverage = data;
+            this.calc();
+        });
+
+        await modal.present();
+    }
+
+    async openTradeMarginCost() {
+        const modal = await this.modalCtrl.create({
+            component: TradeMarginCostPickerPage,
+            componentProps: { value: this.trade_margin_cost, min: 10, max: 10000, title: 'Trade Margin Cost' },
+            breakpoints: [0, 0.4, 0.9],
+            initialBreakpoint: 0.9, // voelt als een sheet zoals in je screenshot
+        });
+
+        modal.onDidDismiss().then(({ data }) => {
+            if (typeof data === 'number') this.trade_margin_cost = data;
             this.calc();
         });
 
