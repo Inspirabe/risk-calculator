@@ -35,5 +35,7 @@ export interface platform{
     id: string,
     label: string,
     maker_fee: number,
-    taker_fee: number
+    taker_fee: number,
+    hex_color: string,
+    text_hex_color: string
 }

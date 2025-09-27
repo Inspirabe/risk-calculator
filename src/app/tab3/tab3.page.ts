@@ -19,13 +19,13 @@ export class Tab3Page implements OnInit, ViewWillEnter {
     constructor(
         public settings: SettingsService,
         private modalCtrl: ModalController
-    ) {}
+    ) {
+        this.settings.risk_capital = (this.settings.capital * (this.settings.desired_risk / 100))
+    }
 
     is_dark_mode: boolean               = false;
     apply_recom_leverage: boolean       = false;
     leverage: number                    = 20; 
-    desired_risk: number                = 1;
-    risk_capital: number                = (this.settings.capital * (this.desired_risk / 100))
     platforms                           = this.settings.platforms;
 
     async ngOnInit(): Promise<void> {
@@ -54,7 +54,7 @@ export class Tab3Page implements OnInit, ViewWillEnter {
 
         const tmp_desired_risk = localStorage.getItem('desired_risk');
         if (tmp_desired_risk !== null) {
-            this.desired_risk = parseInt(tmp_desired_risk, 10);
+            this.settings.desired_risk = parseInt(tmp_desired_risk, 10);
         }
         
         const storedRecomLeverage = localStorage.getItem('apply_recom_leverage');
@@ -76,7 +76,7 @@ export class Tab3Page implements OnInit, ViewWillEnter {
         if (tmp_capital !== null) this.settings.capital = parseInt(tmp_capital, 10);
 
         const tmp_desired_risk = localStorage.getItem('desired_risk');
-        if (tmp_desired_risk !== null) this.desired_risk = parseInt(tmp_desired_risk, 10);
+        if (tmp_desired_risk !== null) this.settings.desired_risk = parseInt(tmp_desired_risk, 10);
     }
 
     setDarkMode(dark: boolean): void {
@@ -87,14 +87,14 @@ export class Tab3Page implements OnInit, ViewWillEnter {
     async openRiskPct() {
         const modal = await this.modalCtrl.create({
             component: RiskPctPickerPage,
-            componentProps: { value: this.desired_risk, min: 1, max: 20, title: 'Edit Desired Risk' },
+            componentProps: { value: this.settings.desired_risk, min: 1, max: 20, title: 'Edit Desired Risk' },
             breakpoints: [0, 0.4, 0.9],
             initialBreakpoint: 0.9,
         });
 
         modal.onDidDismiss().then(({ data }) => {
             if (typeof data === 'number') {
-                this.desired_risk = data;
+                this.settings.desired_risk = data;
                 localStorage.setItem('desired_risk', String(data));
             }
         });
@@ -168,8 +168,9 @@ export class Tab3Page implements OnInit, ViewWillEnter {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD',
-            maximumFractionDigits: 0
-        }).format(val);
+            maximumFractionDigits: 0,
+            currencyDisplay: 'symbol' // keeps "$" without "USD"
+        }).format(val).replace('$', '$ '); // inject space after $
     }
 
     formatPct(val: number): string {

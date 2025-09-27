@@ -127,7 +127,7 @@
                     slot="end"
                     (click)="openTradeMarginCost()"
                     class="px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-800 text-sm font-semibold">
-                <span class="opacity-70">$ </span> {{ trade_margin_cost }}
+                <span class="opacity-70">$ </span> {{ settings.trade_margin_cost }}
             </button>
         </ion-item>
 
@@ -169,12 +169,15 @@
 
         <ion-button expand="block" 
             class="flex-1" 
-            color="secondary"
+            [ngStyle]="{ '--background': settings.platform_hex_color, 'color': settings.platform_text_hex_color }"
             *ngIf="!showUserTrade && settings.selected_platform != ''"
             (click)="placeTrade()">
             <ion-spinner *ngIf="submittingTrade" name="lines-small"></ion-spinner>
-            <ng-container >Submit Trade on {{this.settings.platform_label}}</ng-container>
+            <ng-container >Submit Trade on {{ settings.platform_label }}</ng-container>
         </ion-button>
+
+                    
+
     </div>
     
 </ion-content>

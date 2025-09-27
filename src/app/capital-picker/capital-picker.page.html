@@ -42,9 +42,8 @@
     <ion-item lines="none" class="mt-4">
         <ion-label position="stacked">Enter amount</ion-label>
         <ion-input
-        type="number"
-        inputmode="decimal"
-        [value]="value"
+        type="text"
+        [value]="formatCurrency( value )"
         class="bg-gray-100 dark:bg-gray-800 rounded-md text-right"
         style="--padding-end: .75rem;"
         (ionInput)="onAmountInput($event)"

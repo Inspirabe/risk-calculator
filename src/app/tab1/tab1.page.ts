@@ -41,7 +41,6 @@ export class Tab1Page {
     entry_price: number                     = 0;
     stop_loss_price: number                 = 0;
     take_profit: number                     = 0;
-    trade_margin_cost: number               = 0;
     leverage: number                        = 20;
     capital: number                         = 1000;
     desired_risk: number                    = 1;
@@ -63,7 +62,6 @@ export class Tab1Page {
         if (tmp_leverage !== null) {
             this.leverage = parseInt(tmp_leverage, 10);
         }
-        // this.calc();
     }
 
     calc() {
@@ -115,7 +113,7 @@ export class Tab1Page {
         
         if(this.settings.apply_recom_leverage){
             this.leverage = this.recommended_leverage;
-            this.trade_margin_cost = this.margin_cost;
+            this.settings.trade_margin_cost = this.margin_cost;
         }
     }
 
@@ -193,7 +191,6 @@ export class Tab1Page {
 
         this.leverage = lev;
         localStorage.setItem('pref_leverage', String(lev));
-
         this.calc();
     }
 
@@ -201,7 +198,7 @@ export class Tab1Page {
         const cost = this.margin_cost || 0;
         if (!Number.isFinite(cost) || cost <= 0) return;
 
-        this.trade_margin_cost = Math.round(cost * 100) / 100; // 2 cijfers na de komma
+        this.settings.trade_margin_cost = Math.round(cost * 100) / 100; // 2 cijfers na de komma
     }
 
     async userTrade() {
@@ -359,14 +356,13 @@ export class Tab1Page {
     async openTradeMarginCost() {
         const modal = await this.modalCtrl.create({
             component: TradeMarginCostPickerPage,
-            componentProps: { value: this.trade_margin_cost, min: 10, max: 10000, title: 'Trade Margin Cost' },
+            componentProps: { value: this.settings.trade_margin_cost, min: 10, max: 10000, title: 'Trade Margin Cost' },
             breakpoints: [0, 0.4, 0.9],
             initialBreakpoint: 0.9, // voelt als een sheet zoals in je screenshot
         });
 
         modal.onDidDismiss().then(({ data }) => {
-            if (typeof data === 'number') this.trade_margin_cost = data;
-            this.calc();
+            if (typeof data === 'number') this.settings.trade_margin_cost = data;
         });
 
         await modal.present();

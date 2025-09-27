@@ -9,6 +9,8 @@ export type PlatformRow = {
     label: string;
     maker_fee: number; // percent, e.g. 0.02 means 0.02%
     taker_fee: number; // percent, e.g. 0.05 means 0.05%
+    hex_color: string,
+    text_hex_color: string
 };
 
 export type Symbol = { 
@@ -36,15 +38,26 @@ export class SettingsService{
     }
 
     capital: number                 = 1000;
+    risk_capital: number            = 10;
+    desired_risk: number            = 1;
+    trade_margin_cost: number       = 0;
     user_client_uid:string          = localStorage.getItem('user_client_uid') ?? '';
     selected_platform               = localStorage.getItem('pref_platform') ?? '';
     platform_label                  = localStorage.getItem('platform_label') ?? '';
+    platform_hex_color: string      = localStorage.getItem('platform_hex_color') ?? '#990000';
+    platform_text_hex_color: string = localStorage.getItem('platform_text_hex_color') ?? '#FFFFFF';
     maker_fee: number               = parseFloat(localStorage.getItem('pref_maker_fee') ?? '0.02');
     taker_fee: number               = parseFloat(localStorage.getItem('pref_taker_fee') ?? '0.05');
     apply_recom_leverage: boolean   = (localStorage.getItem('apply_recom_leverage') ?? 'true') === 'true';
 
     platforms = [
-        { id: 'bingx',   label: 'BingX',    maker_fee: 0.02, taker_fee: 0.05 }
+        {   id: 'bingx',   
+            label: 'BingX',    
+            maker_fee: 0.02, 
+            taker_fee: 0.05, 
+            hex_color: '#0052FF', 
+            text_hex_color: '#FFFFFF', 
+        }
     ];
 
     private loaded = false;
@@ -66,6 +79,8 @@ export class SettingsService{
                 label: p.label,
                 maker_fee: +p.maker_fee,
                 taker_fee: +p.taker_fee,
+                hex_color: p.hex_color,
+                text_hex_color: p.text_hex_color,
             }));
             this.loaded = true;
             }
@@ -79,9 +94,13 @@ export class SettingsService{
         this.selected_platform = platform_id;
         const p = this.platforms.find(x => x.id === platform_id);
         if (p) {
+            console.log(p);
+            
             this.platform_label = p.label;
             this.maker_fee = p.maker_fee;
             this.taker_fee = p.taker_fee;
+            this.platform_hex_color = p.hex_color;
+            this.platform_text_hex_color = p.text_hex_color;
         }else{
             this.platform_label = '';
         }
@@ -90,6 +109,8 @@ export class SettingsService{
         localStorage.setItem('platform_label', String(this.platform_label));
         localStorage.setItem('pref_maker_fee', String(this.maker_fee));
         localStorage.setItem('pref_taker_fee', String(this.taker_fee));
+        localStorage.setItem('platform_hex_color', String(this.platform_hex_color));
+        localStorage.setItem('platform_text_hex_color', String(this.platform_text_hex_color));
     }
 
     async loadMarkets(quote: string): Promise<any[]> {
